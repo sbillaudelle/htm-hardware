@@ -56,3 +56,5 @@ target/
 # Other stuff
 *.pdf
 *.pgf
+*.toc
+*.aux
