@@ -62,12 +62,15 @@ for o in np.unique(overlaps[:,0]):
             ])
 
 # plot overlaps
+plt.figure(figsize=(6.2, 4.0))
+
 plt.errorbar(averaged_overlaps[:,0], averaged_overlaps[:,1], yerr=averaged_overlaps[:,2], fmt='.')
 
 plt.xlim((0, 1))
 plt.ylim((0, 1))
 
-plt.xlabel("Input SDR Overlap")
-plt.ylabel("Output SDR Overlap")
+plt.xlabel("input SDR overlap")
+plt.ylabel("output SDR overlap")
 
-plt.savefig(__file__.replace('py', 'pgf'))
+plt.savefig(__file__.replace('py', 'pgf'), bbox_inches='tight', transparent=True)
+plt.savefig(__file__.replace('py', 'pdf'), bbox_inches='tight')

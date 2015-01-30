@@ -15,7 +15,7 @@ orig[np.random.choice(np.arange(N_SOURCES), 100, replace=False)] = 1
 
 data = []
 for sparsity in np.linspace(0.00, 0.15, 21):
-    for i in range(10):
+    for i in range(5):
         d = np.zeros(N_SOURCES)
         d[np.random.choice(np.arange(N_SOURCES), N_SOURCES*sparsity, replace=False)] = 1
         data.append(d)
@@ -57,10 +57,11 @@ for o in np.unique(sparsity[:,0]):
             ])
 
 # plot sparsity
+plt.figure(figsize=(6.2, 4.0))
 plt.errorbar(averaged_sparsity[:,0], averaged_sparsity[:,1], yerr=averaged_sparsity[:,2], fmt='.')
 
-plt.xlabel("Input SDR Sparsity")
-plt.ylabel("Column Sparsity")
+plt.xlabel("number of active columns")
+plt.ylabel("number of active active input cells")
 
-plt.savefig(__file__.replace('py', 'pgf'))
-plt.savefig(__file__.replace('py', 'pdf'))
+plt.savefig(__file__.replace('py', 'pgf'), bbox_inches='tight', transparent=True)
+plt.savefig(__file__.replace('py', 'pdf'), bbox_inches='tight')
