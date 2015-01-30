@@ -6,6 +6,7 @@ import pyNN.nest as pynn
 from htm import patterns
 from htm import sdr
 from htm.spatial_pooler import SpatialPooler
+import utils.pynn
 
 # generate input spike trains
 N_SOURCES = 2000
@@ -29,7 +30,7 @@ pynn.setup(threads=4)
 pooler = SpatialPooler()
 pooler.feed(data)
 
-pynn.run(duration)
+utils.pynn.run(duration)
 (source_spikes, column_spikes) = pooler.get_spikes()
 pynn.end()
 
@@ -69,4 +70,4 @@ plt.ylim((0, 1))
 plt.xlabel("Input SDR Overlap")
 plt.ylabel("Output SDR Overlap")
 
-plt.savefig(__file__.replace('py', 'pdf'))
+plt.savefig(__file__.replace('py', 'pgf'))
