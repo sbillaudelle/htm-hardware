@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
 import pyNN.nest as pynn
 
-from neuron_model import iaf_4_cond_exp
 import sdr
 
 class SpatialPooler(object):
@@ -15,25 +13,18 @@ class SpatialPooler(object):
 
     def create(self):
         # set up columns
-        self.columns = pynn.Population(1000, iaf_4_cond_exp, {
-                'C_m': 500.0,
-                'E_L': -65.0,
-                'E_syn_1': 0.0,
-                'E_syn_2': 0.0,
-                'E_syn_3': 0.0,
-                'E_syn_4': -80.0,
-                'I_e': 0.0,
-                'V_reset': -65.0,
-                'V_th': -50.0,
-                'g_L': 16.6667,
-                't_ref': 2.0,
-                'tau_syn_1': 10.0,
-                'tau_syn_2': 8.0,
-                'tau_syn_3': 5.0,
-                'tau_syn_4': 5.0
+        self.columns = pynn.Population(1000, pynn.IF_cond_exp, {
+                'v_rest': -65.0,
+                'e_rev_E': 0.0,
+                'e_rev_I': -80.0,
+                'v_reset': -65.0,
+                'v_thresh': -50.0,
+                'tau_m': 30.0,
+                'tau_refrac': 2.0,
+                'tau_syn_E': 10.0,
+                'tau_syn_I': 5.0
                 },
                 structure=pynn.space.Line())
-        self.columns.initialize('V_m', -65.0) # this works as expected
 
         self.inhibitory_pool = pynn.Population(10, pynn.IF_cond_exp)
 
@@ -46,22 +37,22 @@ class SpatialPooler(object):
     def connect(self):
         # connect populations
         self.injection = pynn.Projection(self.sources, self.columns,
-                pynn.FixedProbabilityConnector(0.02, weights=0.0033),
-                target='SYN_1',
+                pynn.FixedProbabilityConnector(0.02, weights=0.0033*2),
+                target='excitatory',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
         self.recurrent_excitation = pynn.Projection(self.columns, self.columns,
-                pynn.OneToOneConnector(weights=0.01),
-                target='SYN_2'
+                pynn.OneToOneConnector(weights=0.01*2),
+                target='excitatory'
                 )
         self.lateral_inhibition = pynn.Projection(self.columns, self.columns,
-                pynn.DistanceDependentProbabilityConnector('d < 10', weights=0.004),
-                target='SYN_4',
+                pynn.DistanceDependentProbabilityConnector('d < 10', weights=0.004*2),
+                target='inhibitory',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
         self.global_inhibition = pynn.Projection(self.inhibitory_pool, self.columns,
-                pynn.FixedProbabilityConnector(0.8, weights=0.0012),
-                target='SYN_4',
+                pynn.FixedProbabilityConnector(0.8, weights=0.0012*2),
+                target='inhibitory',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
         self.forward_inhibition = pynn.Projection(self.sources, self.inhibitory_pool,
