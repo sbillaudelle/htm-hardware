@@ -46,7 +46,7 @@ class SpatialPooler(object):
     def connect(self):
         # connect populations
         self.injection = pynn.Projection(self.sources, self.columns,
-                pynn.FixedProbabilityConnector(0.02, weights=0.003),
+                pynn.FixedProbabilityConnector(0.02, weights=0.0033),
                 target='SYN_1',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
@@ -55,12 +55,12 @@ class SpatialPooler(object):
                 target='SYN_2'
                 )
         self.lateral_inhibition = pynn.Projection(self.columns, self.columns,
-                pynn.DistanceDependentProbabilityConnector('d < 10', weights=0.005),
+                pynn.DistanceDependentProbabilityConnector('d < 10', weights=0.004),
                 target='SYN_4',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
         self.global_inhibition = pynn.Projection(self.inhibitory_pool, self.columns,
-                pynn.FixedProbabilityConnector(0.8, weights=0.001),
+                pynn.FixedProbabilityConnector(0.8, weights=0.0012),
                 target='SYN_4',
                 rng=pynn.random.NumpyRNG(seed=5337)
                 )
