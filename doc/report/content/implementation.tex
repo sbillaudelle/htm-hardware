@@ -1,0 +1,41 @@
+\subsection{Static Spatial Pooler}
+
+\subsubsection{Network Description}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics{../circuitry/spatial_pooler.pdf}
+	\end{center}
+	\caption{An implementation of the spatial pooling algorithms. Columns (\emph{C}) are implemented utilizing a single neuron, while the inhibitory pool (\emph{I}) is modeled as a population consisting of e.g. 5 neurons. Projection \emph{1} represents the sparse excitatory connection from the input vector to the columns. At the same time, the global inhibitory pool is stimulated through forward connections (\emph{2}) from the source vector. Thus, the columns' overall activity is limited by this feed forward inhibition (\emph{3}). A recurrent self-excitation (\emph{4}) facilitates enduring activation of single columns. A lateral inhibition with a predefined radius (\emph{5}) fosters a sparse column activity.}
+	\label{fig:static_spatial_pooler}
+\end{figure}
+
+A static version of the spatial pooler can be implemented as a self-normalizing competitive neural network, as shown in figure~\ref{fig:static_spatial_pooler}. Each column is represented by a single cell which is stimulated by a subset of the input vector. Active columns inhibit their neighbors within a radius $r_\text{inh}$. This lateral inhibition leads to a sparse activation of columns. At the same time, active columns try to keep their state by a recurrently excitation themselves.
+
+In order to limit the number of active columns and thus ensure a fixed sparsity of column activity, a global feed-forward inhibition was added. The inhibitory pool is stimulated by all input vector bits and in turn inhibits all columns.
+
+In contrast to previous, software-based implementations, this model is not based on discrete computational steps. Instead, the continuous simulation is artificially divided into time steps of period $T_\text{step}$. A cell's or column's activity is represented by a series of spikes within a time step. The same holds true for the network's stimulus. An input vector of length $n$ is assigned an excitatory population of the same size. For each active bit, the corresponding cell emits a spike train of frequency $\nu_\text{stim}$. To avoid synchronization of the network, random jitter is added to the individual spike times.
+
+\subsubsection{Verification of Spatial Pooler Properties}
+
+\begin{figure}
+	\begin{center}
+		\input{assets/sparsity.pgf}
+	\end{center}
+	\caption{Number of active columns depending on the number of active cells of the input vector. While the output sparsity of course correlates with the input activity, a sufficient plateau is reached for a wide range of input activity counts.}
+	\label{fig:static_spatial_pooler_sparsity}
+\end{figure}
+
+\begin{figure}
+	\begin{center}
+		\input{assets/overlap.pgf}
+	\end{center}
+	\caption{Foobar}
+	\label{fig:static_spatial_pooler_overlap}
+\end{figure}
+
+The basic properties of the spatial pooler were verified for this implementation. For this purpose, the model was instantiated with 1000 columns and an input vector of length 2000\footnote{The limited input vector size is a result of the trade-off between the model's fidelity and the simulation's run time.}.
+
+In a first scenario, input patterns with overlap scores between 0.0 and 1.0 were presented to the network. The overlap score of the column's activity patterns was calculated and plotted against the corresponding input scores. As shown in figure~\ref{fig:static_spatial_pooler_overlap}, …
+
+In order to verify a sparse column activity, the network was stimulated with input data of varying sparsity. As a response, the number of active columns stayed the same for a wide range of active input bits, as is depicted in figure~\ref{fig:static_spatial_pooler_sparsity}.
