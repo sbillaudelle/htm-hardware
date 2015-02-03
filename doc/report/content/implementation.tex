@@ -10,11 +10,33 @@
 	\label{fig:static_spatial_pooler}
 \end{figure}
 
-A static version of the spatial pooler can be implemented as a self-normalizing competitive neural network, as shown in figure~\ref{fig:static_spatial_pooler}. Each column is represented by a single cell which is stimulated by a subset of the input vector. Active columns inhibit their neighbors within a radius $r_\text{inh}$. This lateral inhibition leads to a sparse activation of columns. At the same time, active columns try to keep their state by a recurrently excitation themselves.
+A static version of the spatial pooler can be implemented as a self-normalizing competitive neural network, as shown in figure~\ref{fig:static_spatial_pooler}. Each column is represented by a single cell which is stimulated by a random subset of the input vector's bits. Active columns inhibit their neighbors within a radius $r_\text{inh}$. This lateral inhibition leads to a sparse activation of columns. At the same time, active columns recurrently stimulate themselves and thus try to stay in their active state.
 
-In order to limit the number of active columns and thus ensure a fixed sparsity of column activity, a global feed-forward inhibition was added. The inhibitory pool is stimulated by all input vector bits and in turn inhibits all columns.
+Furthermore, a feed-forward inhibition was added to the network. An inhibitory cell pool collects events from the input vector as a whole. Thus, the pool's activity correlates directly with the number of active input bits. Inhibitory projections to the individual columns dampens the their activity and therefore limits the number of active columns.
 
-In contrast to previous, software-based implementations, this model is not based on discrete computational steps. Instead, the continuous simulation is artificially divided into time steps of period $T_\text{step}$. A cell's or column's activity is represented by a series of spikes within a time step. The same holds true for the network's stimulus. An input vector of length $n$ is assigned an excitatory population of the same size. For each active bit, the corresponding cell emits a spike train of frequency $\nu_\text{stim}$. To avoid synchronization of the network, random jitter is added to the individual spike times.
+In contrast to previous, purely software-based implementations, this model is not based on discrete computational steps. Instead, the continuous simulation is artificially divided into time steps of period $T_\text{step}$. A cell's or column's active state is defined by a series of spikes within a time step. This \emph{rate coding}-based approach limits the amount of information carried by a single event and thus should improve the noise resistance of the model. Similarly, the state of the input vector must be translated into spike trains. Each bit of the vector is assigned an individual spike source. For a true bit, the corresponding source emits a spike train of frequency $\nu_\text{stim}$. False bits are represented by a silent source. To avoid synchronization of the network, random jitter is added to the individual spike times.
+
+The implementation's default parameters are summarized in table~\ref{tab:static_spatial_pooler_defaults}. The spatial pooler's basic properties were verified with the given parameter set.
+
+\begin{table}
+	\begin{tabularx}{\textwidth}{lrX}
+		\toprule
+		Parameter & Default Value & Comment \\
+		\midrule
+		number of columns & 1000 & \\
+		size of inhibitory pool & 10 & \\
+		input vector size & 2000 & \\
+		\midrule
+		$w_\text{stim. → column}$ & 0.0066 & connection probability of 0.02 \\
+		$w_\text{stim. → pool}$ & 0.0035 & connection probability of 0.8 \\
+		$w_\text{global inh.}$ & 0.0024 & connection probability of 0.8 \\
+		$w_\text{recurrent}$ & 0.02 & \\
+		$w_\text{lateral inh.}$ & 0.008 & inhibition radius of 10 \\
+		\bottomrule
+	\end{tabularx}
+	\caption{Default parameters for the static spatial pooler implementation including population sizes as well as connection weights.}
+	\label{tab:static_spatial_pooler_defaults}
+\end{table}
 
 \subsubsection{Verification of Spatial Pooler Properties}
 
@@ -30,7 +52,8 @@ In contrast to previous, software-based implementations, this model is not based
 	\begin{center}
 		\input{assets/overlap.pgf}
 	\end{center}
-	\caption{Foobar}
+	\caption{Foobar},
+
 	\label{fig:static_spatial_pooler_overlap}
 \end{figure}
 
