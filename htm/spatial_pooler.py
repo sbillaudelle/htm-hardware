@@ -17,7 +17,7 @@ args = parser.parse_args()
 pynn.setup(min_delay=0.01, timestep=0.01, threads=4)
 
 # input populations
-connections = (np.random.uniform(0, 1, args.columns*args.inputs) > 0.95).reshape(args.columns, args.inputs).astype(np.int64)
+connections = (np.random.uniform(0, 1, args.columns*args.inputs) > 0.80).reshape(args.columns, args.inputs).astype(np.int64)
 data = np.zeros(args.inputs)
 data[np.random.choice(np.arange(args.inputs), int(round(args.inputs*0.02)), replace=False)] = 1
 
@@ -54,10 +54,10 @@ params_kill_switch = {
 kill_switch = pynn.Population(1, pynn.IF_cond_exp, params_kill_switch)
 
 # connect populations
-pynn.Projection(stimulus, columns, pynn.OneToOneConnector(weights=0.007 + np.random.normal(0, 0.0001, args.columns)))
+pynn.Projection(stimulus, columns, pynn.OneToOneConnector(weights=0.002 + np.random.normal(0, 0.00001, args.columns)))
 pynn.Projection(columns, kill_switch, pynn.AllToAllConnector(weights=0.015))
 pynn.Projection(kill_switch, columns, pynn.AllToAllConnector(weights=0.3), target='inhibitory')
-pynn.Projection(stimulus, columns, pynn.FixedProbabilityConnector(0.05, weights=0.00003), target='inhibitory')
+pynn.Projection(stimulus, columns, pynn.FixedProbabilityConnector(0.05, weights=0.00001), target='inhibitory')
 
 columns.record()
 if args.plot_traces:
@@ -74,10 +74,13 @@ open('asd.csv', 'a').write("{0:d}\n".format(active.size))
 
 # plot histogram
 if args.plot_histogram:
-    counts, bins, patches = plt.hist(activity, 26, (-0.5, 25.5), lw=0, rwidth=0.9)
+    plt.figure(figsize=(8.0, 4.5))
+    counts, bins, patches = plt.hist(activity, 61, (9.5, 70.5), lw=0, rwidth=0.9)
     plt.hist(activity[active], bins=bins, lw=0, rwidth=0.9)
-
-    plt.xlim((-0.5, 25.5))
+    
+    plt.xlabel("Presynaptic Events")
+    plt.ylabel("\#")
+    plt.xlim((9.5, 70.5))
     plt.savefig('activity.pdf')
 
 if args.plot_traces:

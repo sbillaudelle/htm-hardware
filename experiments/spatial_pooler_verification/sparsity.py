@@ -15,7 +15,7 @@ orig[np.random.choice(np.arange(N_SOURCES), 100, replace=False)] = 1
 
 data = []
 for sparsity in np.linspace(0.00, 0.15, 21):
-    for i in range(5):
+    for i in range(10):
         d = np.zeros(N_SOURCES)
         d[np.random.choice(np.arange(N_SOURCES), N_SOURCES*sparsity, replace=False)] = 1
         data.append(d)

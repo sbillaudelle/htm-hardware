@@ -27,12 +27,19 @@
 \usepackage{siunitx}
 \usepackage{xfrac}
 
-\usepackage{pgfplots}
+\usepackage{color}
 \usepackage{tikz}
+
+\usetikzlibrary{shapes,snakes}
 
 \usepackage[comma,authoryear]{natbib}
 
 \usepackage{lipsum}
+
+\newcommand*\circled[2]{\tikz[baseline=(char.base)]{
+	\node[shape=circle,fill=white,draw=#1,inner sep=1pt] (char) {\color{white}\textbf{#2}};
+	\node[shape=circle,fill=#1,inner sep=0.5pt] (char) {\color{white}\textbf{#2}};
+	}}
 
 % Setup page geometry
 \geometry{letterpaper, left=3cm, right=4cm, top=3cm, bottom=4cm}
@@ -51,8 +58,8 @@
 % Color definitions
 \definecolor{blue}{HTML}{348ABD}
 \definecolor{purple}{HTML}{7A68A6}
-\definecolor{red}{HTML}{A60628}
-\definecolor{green}{HTML}{467821}
+\definecolor{red}{HTML}{aa0000}
+\definecolor{green}{HTML}{408040}
 \definecolor{orange}{HTML}{E24A33}
 
 % Set fonts
@@ -179,6 +186,8 @@
 
 \clearpage
 \section{Implementation Details}
+
+
 \input{content/implementation.tex}
 
 \clearpage

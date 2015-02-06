@@ -6,7 +6,7 @@
 	\begin{center}
 		\includegraphics{../circuitry/spatial_pooler.pdf}
 	\end{center}
-	\caption{An implementation of the spatial pooling algorithms. Columns (\emph{C}) are implemented utilizing a single neuron, while the inhibitory pool (\emph{I}) is modeled as a population consisting of e.g. 5 neurons. Projection \emph{1} represents the sparse excitatory connection from the input vector to the columns. At the same time, the global inhibitory pool is stimulated through forward connections (\emph{2}) from the source vector. Thus, the columns' overall activity is limited by this feed forward inhibition (\emph{3}). A recurrent self-excitation (\emph{4}) facilitates enduring activation of single columns. A lateral inhibition with a predefined radius (\emph{5}) fosters a sparse column activity.}
+	\caption{Implementation of the spatial pooling algorithms. Columns \emph{C} are implemented utilizing a single neuron, while the inhibitory pool \emph{I} is modeled as a population consisting of e.g. 5 neurons. Projection \protect\circled{green}{1} represents the sparse excitatory connection from the input vector to the columns. At the same time, the global inhibitory pool is stimulated through forward connections \protect\circled{green}{2} from the source vector. Thus, the columns' overall activity is limited by this feed forward inhibition \protect\circled{green}{3}. A recurrent self-excitation \protect\circled{green}{4} facilitates enduring activation of single columns. A lateral inhibition with a predefined radius \protect\circled{green}{5} fosters a sparse column activity.}
 	\label{fig:static_spatial_pooler}
 \end{figure}
 
@@ -62,3 +62,13 @@ The basic properties of the spatial pooler were verified for this implementation
 In a first scenario, input patterns with overlap scores between 0.0 and 1.0 were presented to the network. The overlap score of the column's activity patterns was calculated and plotted against the corresponding input scores. As shown in figure~\ref{fig:static_spatial_pooler_overlap}, …
 
 In order to verify a sparse column activity, the network was stimulated with input data of varying sparsity. As a response, the number of active columns stayed the same for a wide range of active input bits, as is depicted in figure~\ref{fig:static_spatial_pooler_sparsity}.
+
+\subsection{Static Temporal Memory}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics{../circuitry/column.pdf}
+	\end{center}
+	\caption{Implementation of the temporal memory not including plasticity. Every HTM cell within a column is modeled with three individual LIF cells modelling different compartments (distal dendrites \emph{D}, soma \emph{S} and a lateral inhibition segment \emph{I} -- which is not biologically inspired). Per column, there exist multiple cell triples as well as one ``head'' cell \emph{P} which participates in the columnar competition and collects proximal input for the whole column. Activity of this cell is forwarded to the individual soma cells of the column \protect\circled{green}{1}. Without a previous prediction, this results in all soma cells fireing. However, the distal compartment sums over the input of the previous time step. With a threshold being reached, the inhibitory compartment is depolarized by forwarding an event on \protect\circled{green}{3}. Together with proximal input \protect\circled{green}{2}, the inhibitory partition fires and inhibits all other cells in the column \protect\circled{green}{4}.}
+	\label{fig:static_temporal_memory}
+\end{figure}
