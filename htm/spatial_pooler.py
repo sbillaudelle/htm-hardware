@@ -109,14 +109,16 @@ class SpatialPooler(object):
         """Perform the actual computation"""
 
         timestep = self.parameters.config.timestep
-        activity = self.calculate_activity(data)
+        activity = np.array(self.calculate_activity(data))
 
         # generate spike train from given input vector data
-        train = np.ndarray((0, 2))
+        pos = 0
+        train = np.ndarray((np.sum(activity), 2))
         for i, d in enumerate(data):
             for j in range(len(self.stimulus)):
                 spikes = np.sort(np.random.normal(1.0 + i*timestep, 0.01, activity[i][j]))
-                train = np.vstack([train, np.vstack([np.ones(spikes.size)*j, spikes]).T])
+                train[pos:pos+activity[i][j],:] = np.vstack([np.ones(spikes.size)*j, spikes]).T
+                pos += activity[i][j]
 
         # set stimulus
         for j, s in enumerate(self.stimulus):
@@ -130,7 +132,6 @@ class SpatialPooler(object):
             spikes = self.columns.getSpikes()
             mask = (spikes[:,1] > i*timestep) & (spikes[:,1] < (i + 1)*timestep)
             activity = np.unique(spikes[mask,0]).astype(np.int32)
-
             yield activity
 
     def get_spikes(self):
