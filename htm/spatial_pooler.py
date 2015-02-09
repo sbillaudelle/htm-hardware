@@ -64,6 +64,7 @@ class SpatialPooler(object):
        
         self.stimulus.record()
         self.columns.record()
+        self.kill_switch.record()
         if self.parameters.config.record_traces:
             self.columns.record_v()
             self.kill_switch.record_v()
@@ -127,7 +128,7 @@ class SpatialPooler(object):
     def get_spikes(self):
         """Extract spike times from sources as well as columns"""
 
-        return (self.stimulus.getSpikes(), self.columns.getSpikes())
+        return (self.stimulus.getSpikes(), self.columns.getSpikes(), self.kill_switch.getSpikes())
 
     def get_traces(self):
         """Extract traces from columns.
@@ -135,5 +136,5 @@ class SpatialPooler(object):
         """
 
         assert self.parameters.config.record_traces
-        return self.columns.get_v()
+        return (self.columns.get_v(), self.kill_switch.get_v())
 
