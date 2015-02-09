@@ -123,16 +123,15 @@ class SpatialPooler(object):
             s.spike_times = train[train[:,0] == j,1]
 
         # run simulation
-        pynn.run(timestep*len(data))
-
-        # extract spikes and calculate activity
-        spikes = self.columns.getSpikes()
-        activity = []
         for i in range(len(data)):
+            pynn.run(timestep)
+
+            # extract spikes and calculate activity
+            spikes = self.columns.getSpikes()
             mask = (spikes[:,1] > i*timestep) & (spikes[:,1] < (i + 1)*timestep)
-            active = np.unique(spikes[mask,0]).astype(np.int32)
-            activity.append(active)
-        return activity
+            activity = np.unique(spikes[mask,0]).astype(np.int32)
+
+            yield activity
 
     def get_spikes(self):
         """Extract spike times from sources as well as columns"""
