@@ -1,4 +1,4 @@
-\subsection{Static Spatial Pooler}
+\subsection{Rate Based Static Spatial Pooler}
 
 \subsubsection{Network Description}
 
@@ -63,7 +63,17 @@ In a first scenario, input patterns with overlap scores between 0.0 and 1.0 were
 
 In order to verify a sparse column activity, the network was stimulated with input data of varying sparsity. As a response, the number of active columns stayed the same for a wide range of active input bits, as is depicted in figure~\ref{fig:static_spatial_pooler_sparsity}.
 
+\subsection{Timing Based Static Spatial Pooler}
+
 \subsection{Static Temporal Memory}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics{../circuitry/spatial_pooler_2.pdf}
+	\end{center}
+	\caption{Spike timing based implementation of a spatial pooler. Each column is represented by a single cell \emph{c} and receives sparse input \protect\circled{green}{1} from the input vector. Dependinding on the number of connected active input bits, a column reaches its firing threshold after a certain delay: cells receiving a higher number of presynaptic events will reach that threshold earlier. The inhibitory pool \emph{I} accumulates the number of active columns on its membrane \protect\circled{green}{2}. After a predifined number of active columns, the cell inhibits all columns \protect\circled{green}{3}.}
+	\label{fig:static_timing_spatial_pooler}
+\end{figure}
 
 \begin{figure}
 	\begin{center}
