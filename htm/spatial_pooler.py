@@ -55,8 +55,12 @@ class SpatialPooler(object):
         self.stimulus = pynn.Population(n_columns, pynn.SpikeSourceArray)
 
         # create compartments
-        self.columns = pynn.Population(n_columns, pynn.IF_cond_exp, self.parameters.populations.columns.neurons)
-        self.kill_switch = pynn.Population(1, pynn.IF_cond_exp, self.parameters.populations.inhibition.neurons)
+        self.columns = pynn.Population(n_columns, pynn.IF_cond_exp,
+                self.parameters.populations.columns.neurons
+                )
+        self.kill_switch = pynn.Population(1, pynn.IF_cond_exp,
+                self.parameters.populations.inhibition.neurons
+                )
        
         self.stimulus.record()
         self.columns.record()
@@ -67,24 +71,28 @@ class SpatialPooler(object):
     def connect(self):
         """Setup connections between populations"""
 
-        # connect populations
         params = self.parameters.projections
-
-        stimulus_connector = pynn.OneToOneConnector(weights=params.stimulus.weight + np.random.normal(0, params.stimulus.jitter, len(self.columns)))
+       
+        # generate weights with normal distributed jitter and set up stimulus 
+        w = params.stimulus.weight + np.random.normal(0, params.stimulus.jitter, len(self.columns))
+        stimulus_connector = pynn.OneToOneConnector(weights=w)
         pynn.Projection(self.stimulus, self.columns, stimulus_connector)
 
+        # projection to accumulate/count the number of active columns
         accumulation_connector = pynn.AllToAllConnector(weights=params.accumulation.weight)
         pynn.Projection(self.columns, self.kill_switch, accumulation_connector)
 
+        # projection to inhibit all columns
         inhibition_connector = pynn.AllToAllConnector(weights=params.inhibition.weight)
         pynn.Projection(self.kill_switch, self.columns, inhibition_connector, target='inhibitory')
 
+        # forward inhibition
         forward_inhibition_connector = pynn.FixedProbabilityConnector(params.forward_inhibition.probability, weights=params.forward_inhibition.weight)
         pynn.Projection(self.stimulus, self.columns, forward_inhibition_connector, target='inhibitory')
-        
+       
+        # calculate connectivity matrix
         n_columns = self.parameters.populations.columns.size
         n_inputs = self.parameters.config.input_size
-    
         self.connections = (np.random.uniform(0, 1, n_columns*n_inputs) > 0.80).reshape(len(self.columns), n_inputs).astype(np.int64)
 
     def compute(self, data):
@@ -129,68 +137,3 @@ class SpatialPooler(object):
         assert self.parameters.config.record_traces
         return self.columns.get_v()
 
-"""
-print active.size
-open('asd.csv', 'a').write("{0:d}\n".format(active.size))
-
-# plot histogram
-if args.plot_histogram:
-    plt.figure(figsize=(8.0, 4.5))
-    counts, bins, patches = plt.hist(activity, 61, (9.5, 70.5), lw=0, rwidth=0.9)
-    plt.hist(activity[active], bins=bins, lw=0, rwidth=0.9)
-    
-    plt.xlabel("Presynaptic Events")
-    plt.ylabel("\#")
-    plt.xlim((9.5, 70.5))
-    plt.savefig('activity.pdf')
-
-if args.plot_traces:
-    traces = columns.get_v()
-
-    plt.figure(figsize=(6.2, 9.0))
-
-    # plot kill switch
-    grid = gs.GridSpec(1, 1)
-    grid.update(top=0.95, bottom=0.85, hspace=0.05)
-
-    trace = kill_switch.get_v()
-    ax = plt.subplot(grid[0, 0])
-    ax.grid(False)
-    ax.set_title("Inhibitory Pool")
-    ax.plot(trace[:,1], trace[:,2])
-
-    choice = np.argsort(activity)[-active.size-3:-active.size+3]
-
-    # plot columns
-    grid = gs.GridSpec(choice.size, 1)
-    grid.update(top=0.80, bottom=0.05, hspace=0.05)
-
-    for i, col in enumerate(choice):
-        ax = plt.subplot(grid[i, 0])
-        ax.grid(False)
-        ax.set_ylim((-66, -49))
-        ax.set_yticks(np.linspace(-65, -50, 4))
-
-        if i == 0:
-            ax.set_title("Columns")
-        
-        if i == (choice.size - 1):
-            ax.set_xlabel("$t$ [\si{\milli\second}]")
-        else:
-            ax.tick_params(\
-                    axis='x',
-                    which='both',
-                    bottom='off',
-                    top='off',
-                    labelbottom='off')
-
-        if spikes[spikes[:,0] == col,:].size > 0:
-            ax.set_axis_bgcolor('lightgreen')
-
-        mask = (traces[:,0] == col)
-        ax.plot(traces[mask,1], traces[mask,2])
-       
-        ax.text(ax.get_xlim()[1] - 0.6, ax.get_ylim()[1] - 1, "{0}".format(activity[col]), va='top', ha='right')
-
-    plt.savefig('spatial_pooler.pdf', bbox_inches='tight')
-"""
