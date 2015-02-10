@@ -1,3 +1,7 @@
+#! /usr/bin/python2
+# -*- coding: utf-8 -*-
+
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -6,44 +10,44 @@ import pyNN.nest as pynn
 from htm import patterns
 from htm import sdr
 from htm.spatial_pooler import SpatialPooler
-import utils.pynn
 
 # generate input spike trains
-N_SOURCES = 2000
+N_SOURCES = 10000
 
 orig = np.zeros(N_SOURCES)
-orig[np.random.choice(np.arange(N_SOURCES), 100, replace=False)] = 1
+orig[np.random.choice(np.arange(N_SOURCES), 200, replace=False)] = 1
 
 data = []
 data.append(orig)
 
 for overlap in np.linspace(0.0, 1.0, 21):
-    for i in range(10):
+    for i in range(5):
         data.append(patterns.generate_pattern(orig.copy(), overlap))
 
-duration = len(data) * 200.
 data = np.array(data)
 
-# setup and run simultion
+# setup and run simulation
 pynn.setup(threads=4)
 
 pooler = SpatialPooler()
-pooler.feed(data)
 
-utils.pynn.run(duration)
-(source_spikes, column_spikes) = pooler.get_spikes()
+active = []
+for i, a in enumerate(pooler.compute(data)):
+    active.append(a)
+    sys.stdout.write("\rComputing… [{0}/{1}]".format(i + 1, len(data)))
+    sys.stdout.flush()
+
+sys.stdout.write("\n")
+sys.stdout.flush()
+
 pynn.end()
 
 # calculate overlaps
 overlaps = np.ndarray((0, 2))
 orig_representation = None
 for i in range(len(data)):
-    t_0 = i*200.
-    t_1 = (i+1)*200.
-    mask = (column_spikes[:,1] > t_0) & (column_spikes[:,1] < t_1)
-
-    r = sdr.spikes_to_sdr(column_spikes[mask,:], 1000) 
-    
+    r = np.zeros(1000)
+    r[active[i]] = 1
     if i == 0:
         orig_representation = r
     else:
