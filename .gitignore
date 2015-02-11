@@ -58,3 +58,9 @@ target/
 *.pgf
 *.toc
 *.aux
+*.glo
+*.out
+*.xdy
+*.npy
+
+experiments/init.sh
