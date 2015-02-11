@@ -40,6 +40,9 @@ class SpatialPooler(object):
     defaults.projections.forward_inhibition.weight = 0.00001
 
     def __init__(self, params={}):
+        # verify correct PyNN setup
+        assert pynn.get_min_delay() == 0.01
+
         # merge parameters into defaults
         self.parameters = self.defaults.copy()
         self.parameters.update(params)
