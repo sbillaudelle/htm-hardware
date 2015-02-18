@@ -32,7 +32,17 @@
 
 \usetikzlibrary{shapes,snakes}
 
-\usepackage[comma,authoryear]{natbib}
+\usepackage[
+	backend=biber,
+	style=authoryear-icomp,
+	sortlocale=en_US,
+	natbib=true,
+	url=false, 
+	doi=true,
+	eprint=false
+]{biblatex}
+
+\addbibresource{report.bib}
 
 \usepackage{lipsum}
 
@@ -42,12 +52,12 @@
 	}}
 
 % Setup page geometry
-\geometry{letterpaper, left=3cm, right=4cm, top=3cm, bottom=4cm}
-\linespread{1.06}
+\geometry{letterpaper, left=3cm, right=4cm, top=2.7cm, bottom=3.7cm}
+\linespread{1.03}
 \renewcommand{\arraystretch}{1.3}
 \setlength{\jot}{10pt}
-\setlength{\abovecaptionskip}{8pt}
-\setlength{\belowcaptionskip}{20pt} 
+\setlength{\abovecaptionskip}{0pt}
+\setlength{\belowcaptionskip}{10pt} 
 
 \newcommand{\sectionbreak}{\clearpage}
 
@@ -131,6 +141,8 @@
 \newacronym{btd}{BTD}{Biological Time Domain}
 \newacronym{vlsi}{VLSI}{Very Large Scale Integration}
 \newacronym{asic}{ASIC}{Application Specific Integrated Circuit}
+\newacronym{lif}{LIF}{Leaky Integrate-and-Fire}
+\newacronym{kwta}{kWTA}{$k$-Winners-Take-All}
 
 \makeglossaries
 
@@ -183,11 +195,10 @@
 \glsresetall
 
 \section{Introduction}
+\input{content/introduction.tex}
 
 \clearpage
 \section{Implementation Details}
-
-
 \input{content/implementation.tex}
 
 \clearpage
@@ -195,5 +206,8 @@
 
 \clearpage
 \section{Conclusion}
+
+\clearpage
+\printbibliography
 
 \end{document}

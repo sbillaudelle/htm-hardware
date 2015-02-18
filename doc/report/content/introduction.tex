@@ -1,0 +1,11 @@
+\subsection{Spatial Pooler}
+\label{sec:spatial_pooler_properties}
+
+The spatial pooler can be characterized by a collection of properties:
+
+\begin{enumerate}
+	\item\label{enm:spatial_pooler_sparsity} The colums's activity is spatially sparse. Typically, 40 out of 1,000 colums are active, which is equivalent to a sparsity of \SI{4}{\%}. The number of active columns is constant for each time step and does not depend on the input sparsity.
+	\item\label{enm:spatial_pooler_minimum} A column must receive a minimum input of e.g. 15 to become active.
+	\item\label{enm:spatial_pooler_selection} The spatial pooler selects the $k$ columns which receive the most input. In case of a tie between two columns, the active column is selected randomly.
+	\item\label{enm:spatial_pooler_overlap} Similar input results in similar activity patterns. For disjunct stimuli, the network yields activity patterns with low overlap counts.
+\end{enumerate}
