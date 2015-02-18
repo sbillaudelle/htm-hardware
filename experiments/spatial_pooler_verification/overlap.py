@@ -4,6 +4,7 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import addict
 
 import pyNN.nest as pynn
 
@@ -27,9 +28,16 @@ for overlap in np.linspace(0.0, 1.0, 21):
 data = np.array(data)
 
 # setup and run simulation
-pynn.setup(threads=4)
+pynn.setup(min_delay=0.01, timestep=0.01, threads=4)
 
-pooler = SpatialPooler()
+params = addict.Dict()
+params.config.timestep = 80.0
+params.projections.stimulus.weight = 0.002
+params.projections.forward_inhibition.weight = 0.00008
+params.projections.accumulation.weight = 0.017
+params.populations.columns.neurons.tau_m = 20.0
+params.populations.columns.neurons.tau_syn_E = 8.0
+pooler = SpatialPooler(params)
 
 active = []
 for i, a in enumerate(pooler.compute(data)):
@@ -64,6 +72,8 @@ for o in np.unique(overlaps[:,0]):
             averaged_overlaps,
             np.array([o, np.mean(overlaps[mask,1]), np.std(overlaps[mask,1])])
             ])
+
+np.save('overlap.npy', averaged_overlaps)
 
 # plot overlaps
 plt.figure(figsize=(6.2, 4.0))

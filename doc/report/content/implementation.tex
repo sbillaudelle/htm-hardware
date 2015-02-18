@@ -66,9 +66,9 @@
 
 \begin{figure}
 	\begin{center}
-		\includegraphics{../circuitry/spatial_pooler_2.pdf}
+		\includegraphics{../circuitry/spatial_pooler.pdf}
 	\end{center}
-	\caption{Timing based implementation of the spatial pooler. Each column is represented by a single cell \emph{C} and receives sparse input \protect\circled{green}{1} from the input vector. Depending on the number of connected active input bits, a column reaches its firing threshold after a certain delay: cells receiving a higher number of presynaptic events will reach that threshold earlier. The inhibitory pool \emph{I} accumulates the number of active columns on its membrane \protect\circled{green}{2}. After a predefined number of active columns, the cell inhibits all columns \protect\circled{green}{3}.}
+	\caption{Timing based implementation of the spatial pooler. Each column is represented by a single cell \emph{C} and receives sparse input \protect\circled{green}{1} from the input vector. The columns become active when the number of connected active inputs crosses a threshold. The rise time of the membrane voltage highly depends on the number of coincident inputs: cells with more presynaptic activity will fire before those with less stimuli do. Inhibitory pool \emph{I} accumulates the columnar spikes \protect\circled{green}{2} and in doing so serves as a counter. After a certain number of columns have become active, the pool will inhibit and shut down all columns preventing any further activity \protect\circled{green}{3}. To stabilize this \gls{kwta} model, all columns receive a subsampled feed-forward inhibition \protect\circled{green}{4}. This effectively prolongs the decision period for high input activity.}
 	\label{fig:spatial_pooler}
 \end{figure}
 
@@ -94,7 +94,7 @@ The proposed \gls{kwta} architecture was developed with the spatial pooler's pro
 
 The spatial pooler properties were investigated for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input vector was multiplied to the feed forward connectivity matrix yielding a vector $\vec{l}$ containing the number of active inputs per column. This allowed to simulate the model with only 1,000 spike sources. Each source was configured to emit $l_i$ normally distributed events distributed within a very small time window, simulating the same number of coincident events from multiple input vector elements.
 
-A first experiment was designed to verify the basic \gls{kwta} functionality. A random pattern was presented to the network. The number of active inputs per column -- the input overlap score -- can be visualized in a histogram as shown in figure~\ref{fig:spatial_pooler_activity}. By highlighting only the active columns, one can investigate the network's selection criteria. Complying with the requirements for a spatial pooler, only rightmost bars -- representing columns with the highest input counts -- are highlighted. Furthermore, the model's capability to resolve ties between columns receiving the same input counts is demonstrated: the bar at the decision boundary was not selected as a whole but only a few columns were picked. This verifies spatial pooler property~\ref{enm:spatial_pooler_selection}.
+A first experiment was designed to verify the basic \gls{kwta} functionality. A random pattern was presented to the network. The number of active inputs per column -- the input overlap score -- can be visualized in a histogram as shown in figure~\ref{fig:spatial_pooler_activity}. By highlighting the active columns, one can investigate the network's selection criteria. Complying with the requirements for a spatial pooler, only the rightmost bars -- representing columns with the highest input counts -- are highlighted. Furthermore, the model's capability to resolve ties between columns receiving the same input counts is demonstrated: the bar at the decision boundary was not selected as a whole but only a few columns were picked. This verifies spatial pooler property~\ref{enm:spatial_pooler_selection}.
 
 In a second scenario, input vectors with varying sparsity were fed into the network, as shown in figure~\ref{fig:spatial_pooler_sparsity}. The number of active columns stays constant across a wide range of input sparsity. Additionally the plot shows that columns must receive a minimum amount of input to become active at all. This verifies the underlaying \gls{kwta} approach as well as spatial pooler properties~\ref{enm:spatial_pooler_sparsity} and~\ref{enm:spatial_pooler_minimum}.
 
@@ -120,11 +120,17 @@ To verify the general functionality of a spatial pooler, expressed in property~\
 	\begin{center}
 		\input{assets/spatial_pooler/overlap/overlap.pgf}
 	\end{center}
-	\caption{Output overlap as a dependency of the input vector's overlap. Similar input gets mapped to similar output patterns, while disjunct input results in low overlap scores.} 
+	\caption{Output overlap as a dependency of the input vector's overlap. Similar input gets mapped to similar output patterns, while disjunct input results in low overlap scores. Results from a software-based implementation is included as a reference in this plot.}
 	\label{fig:spatial_pooler_overlap}
 \end{figure}
 
+\subsubsection{Conclusion}
+
+The experiments have shown that the model presented in this section does fulfill the requirements for a spatial pooler and can be considered a solid \gls{kwta} implementation. The specific results of course depend on the individual network's size and configuration. In this case, the network -- most importantly the columnar neurons' time constants -- was configured for a relatively short time step of $T = \SI{50}{\milli\second}$. By choosing different parameter sets, the network can be tuned towards different operational scenarios, e.g. further increasing the model's stability.
+
 \subsection{Static Temporal Memory}
+
+Lorem ipsum dolor sit amet.
 
 \begin{figure}
 	\begin{center}
