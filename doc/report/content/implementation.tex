@@ -68,15 +68,15 @@
 	\begin{center}
 		\includegraphics{../circuitry/spatial_pooler.pdf}
 	\end{center}
-	\caption{Timing based implementation of the spatial pooler. Each column is represented by a single cell \emph{C} and receives sparse input \protect\circled{green}{1} from the input vector. The columns become active when the number of connected active inputs crosses a threshold. The rise time of the membrane voltage highly depends on the number of coincident inputs: cells with more presynaptic activity will fire before those with less stimuli do. Inhibitory pool \emph{I} accumulates the columnar spikes \protect\circled{green}{2} and in doing so serves as a counter. After a certain number of columns have become active, the pool will inhibit and shut down all columns preventing any further activity \protect\circled{green}{3}. To stabilize this \gls{kwta} model, all columns receive a subsampled feed-forward inhibition \protect\circled{green}{4}. This effectively prolongs the decision period for high input activity.}
+	\caption{Timing based implementation of the spatial pooler. Each column is represented by a single cell \emph{C} and receives sparse input from the input vector \protect\circled{green}{1}. The columns become active when the number of connected active inputs crosses a threshold. The rise time of the membrane voltage highly depends on the number of coincident inputs: cells with more presynaptic activity will fire before those with less stimuli do. Inhibitory pool \emph{I} accumulates the columnar spikes \protect\circled{green}{2} and in doing so acts as a counter. After a certain number of columns have become active, the pool will inhibit and shut down all columns preventing any further activity \protect\circled{green}{3}. To stabilize this \gls{kwta} model, all columns receive a subsampled feed-forward inhibition \protect\circled{green}{4}. This effectively prolongs the decision period for high input activity.}
 	\label{fig:spatial_pooler}
 \end{figure}
 
-At its core the spatial pooler resembles a \gls{kwta} network: $k$ out of $n$ columns are chosen to be active for each time step. In fact, \gls{kwta} networks have often been mentioned as an approximation for circuits naturally occurring in the neocortex \citep{felch2008hypergeometric}. While this topic has been discussed broadly and continuous-time as well as VLSI implementations were investigated \citep{erlanson1991analog,tymoshchuk2012,maass2000neural}, the requirements leading to this particular solution go beyond the discussed network architectures.
+At its core the spatial pooler resembles a \gls{kwta} network: $k$ out of $n$ columns are chosen to be active in each time step. In fact, \gls{kwta} networks have often been mentioned as an approximation for circuits naturally occurring in the neocortex \citep{felch2008hypergeometric}. While this topic has been discussed broadly in literature and continuous-time as well as VLSI implementations were investigated \citep{erlanson1991analog,tymoshchuk2012,maass2000neural}, the requirements which lead to this particular solution go beyond the discussed network architectures.
 
 \subsubsection{Network Description}
 
-The network presented in figure~\ref{fig:spatial_pooler} follows a purely timing-based approach designed for \gls{lif} neurons. It allows for very fast decision processes based on a single input event per source. Each column is represented by a single cell which accumulates feed-forward input from the spike sources. Here, the rise time of the membrane voltage decreases with the number of presynaptic events seen by the cell: cells receiving the most input will fire first. A inhibitory pool consisting of a single cell collects the network's activity. Low membrane and high synaptic time constants lead to a reliable summation of events. When a certain number of spikes have been collected -- and thus the threshold has been crossed --, the pool strongly inhibits all cells of the network suppressing following events.
+The network presented in figure~\ref{fig:spatial_pooler} follows a purely timing-based approach and is designed for \gls{lif} neurons. It allows for very fast decision processes based on a single input event per source. Each column is represented by a single cell which accumulates feed-forward input from the spike sources. Here, the rise time of the membrane voltage decreases with the number of presynaptic events seen by the cell: cells receiving the most input will fire before the others. An inhibitory pool consisting of a single cell collects the network's activity. Low membrane and high synaptic time constants lead to a reliable summation of events. When a certain number of spikes have been collected -- and thus the cell's threshold has been crossed --, the pool strongly inhibits all cells of the network suppressing following spike events.
 
 The model is extended by adding subtle feed-forward shunting inhibition. The inhibitory conductance increases with the overall input activity $\nu_\text{in}$. Since the reversal potential is configured to match the leakage potential, the conductance contributes to the leakage term
 
@@ -86,13 +86,13 @@ The model is extended by adding subtle feed-forward shunting inhibition. The inh
 %
 thus increasing the membrane time constant. This effectively slows down the neurons' responses and thus prolongs the decision period of the network.
 
-Tie situations between columns receiving the same number of presynaptic events can be resolved by adding slight gaussian jitter to the weights of the excitatory feed-forward connections. This gives some columns structural advantages over other columns resulting in a faster response to the same stimulus. By increasing the standard deviation $\sigma_\text{j}$ of the jitter, the selection criterion is softened.
+Tie situations between columns receiving the same number of presynaptic events can be resolved by adding slight gaussian jitter to the weights of the excitatory feed-forward connections. This gives some columns structural advantages over other columns resulting in a slightly faster response to the same stimulus. By increasing the standard deviation $\sigma_\text{j}$ of the jitter, the selection can be blurred.
 
 The proposed \gls{kwta} architecture was developed with the spatial pooler's properties in mind. In the following paragraphs, the model's performance is examined and compared to the goals formulated in section~\ref{sec:spatial_pooler_properties}.
 
 \subsubsection{Verification of Spatial Pooler Properties}
 
-The spatial pooler properties were investigated for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input vector was multiplied to the feed forward connectivity matrix yielding a vector $\vec{l}$ containing the number of active inputs per column. This allowed to simulate the model with only 1,000 spike sources. Each source was configured to emit $l_i$ normally distributed events distributed within a very small time window, simulating the same number of coincident events from multiple input vector elements.
+The spatial pooler properties were investigated for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input vector was multiplied to the feed forward connectivity matrix yielding a vector $\vec{l}$ containing the number of active inputs per column. This allowed to simulate the model with only 1,000 spike sources. Each source was configured to emit $l_i$ normally distributed events within a very small time window, simulating the same number of coincident events from multiple input vector elements.
 
 A first experiment was designed to verify the basic \gls{kwta} functionality. A random pattern was presented to the network. The number of active inputs per column -- the input overlap score -- can be visualized in a histogram as shown in figure~\ref{fig:spatial_pooler_activity}. By highlighting the active columns, one can investigate the network's selection criteria. Complying with the requirements for a spatial pooler, only the rightmost bars -- representing columns with the highest input counts -- are highlighted. Furthermore, the model's capability to resolve ties between columns receiving the same input counts is demonstrated: the bar at the decision boundary was not selected as a whole but only a few columns were picked. This verifies spatial pooler property~\ref{enm:spatial_pooler_selection}.
 
@@ -123,6 +123,20 @@ To verify the general functionality of a spatial pooler, expressed in property~\
 	\caption{Output overlap as a dependency of the input vector's overlap. Similar input gets mapped to similar output patterns, while disjunct input results in low overlap scores. Results from a software-based implementation is included as a reference in this plot.}
 	\label{fig:spatial_pooler_overlap}
 \end{figure}
+
+\subsubsection{Learning}
+
+Realizing online learning mechanisms in neuromorphic hardware represents a huge challenge. In order to follow the \gls{htm} specification as close possible, a supervised update rule was implemented: for each time step, a matrix containing permanence values for every connection is updated according to the activity patterns of the previous time step. This allows to implement the concepts of structural plasticity presented in the original white paper. Exeriments to replace the used form of structural plasticity by a classic nearest-neighbor \gls{stdp} model did not yield the desired results.
+
+\begin{figure}
+	\begin{center}
+		\input{assets/spatial_pooler/learning/learning.pgf}
+	\end{center}
+	\caption{Dependency of output and input overlap for a trained spatial pooler. Results of five independent simulation runs are shown as well as reference data from a custom software implementation.}
+	\label{fig:spatial_pooler_learning}
+\end{figure}
+
+Simulation results of the chosen implementation are shown in figure~\ref{fig:spatial_pooler_learning}. For the target platform, the learning algorithms could be implemented on the \gls{ppu} which is planned for the next version of the \gls{hicann} chip \citep{friedmann2013phd}.
 
 \subsubsection{Conclusion}
 

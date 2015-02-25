@@ -74,7 +74,10 @@
 
 % Set fonts
 \setmainfont[Mapping=tex-text, ItalicFont={Linux Libertine Italic}, BoldFont={Linux Libertine Bold}]{Linux Libertine}
-\setsansfont[Mapping=tex-text, BoldFont={Linux Biolinum Bold}]{Linux Biolinum}
+%\setsansfont[Mapping=tex-text, BoldFont={Linux Biolinum Bold}]{Linux Biolinum}
+\setsansfont[Mapping=tex-text, BoldFont={Linux Libertine Bold}]{Linux Libertine}
+\setmathfont[range=\mathit]{Linux Libertine Italic}
+\setmathfont{Linux Libertine}
 %\setmathfont{Latin Modern Math}
 
 \titleformat{\section}
@@ -98,7 +101,7 @@
 
 %\sisetup{detect-all}
 
-% Setup listings
+% Setup listvings
 \lstset{ %
     backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
 	basicstyle=\fontsize{11pt}{11pt}\selectfont\tt,        % the size of the fonts that are used for the code
@@ -143,6 +146,8 @@
 \newacronym{asic}{ASIC}{Application Specific Integrated Circuit}
 \newacronym{lif}{LIF}{Leaky Integrate-and-Fire}
 \newacronym{kwta}{kWTA}{$k$-Winners-Take-All}
+\newacronym{htm}{HTM}{Hirarchical Temporal Memory}
+\newacronym{ppu}{PPU}{Plasticity Processing Unit}
 
 \makeglossaries
 
