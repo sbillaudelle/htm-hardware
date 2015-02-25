@@ -1,6 +1,7 @@
 #! /usr/bin/python2
 # -*- coding: utf-8 -*-
 
+import csv
 import numpy as np
 import addict
 
@@ -19,25 +20,25 @@ class SpatialPooler(object):
     defaults.populations.columns.size = 1000
     defaults.populations.columns.neurons.e_rev_I = -65.0
     defaults.populations.columns.neurons.v_thresh = -50.0
-    defaults.populations.columns.neurons.tau_m = 15.0
+    defaults.populations.columns.neurons.tau_m = 20.0
     defaults.populations.columns.neurons.tau_refrac = 5.0
-    defaults.populations.columns.neurons.tau_syn_E = 6.0
+    defaults.populations.columns.neurons.tau_syn_E = 8.0
     defaults.populations.columns.neurons.tau_syn_I = 10.0
 
     defaults.populations.inhibition.neurons.e_rev_I = -80.0
     defaults.populations.inhibition.neurons.v_reset = -70.0
     defaults.populations.inhibition.neurons.v_thresh = -60.0
-    defaults.populations.inhibition.neurons.tau_m = 0.3
+    defaults.populations.inhibition.neurons.tau_m = 0.2
     defaults.populations.inhibition.neurons.tau_refrac = 5.0
-    defaults.populations.inhibition.neurons.tau_syn_E = 1.0
+    defaults.populations.inhibition.neurons.tau_syn_E = 5.0
     defaults.populations.inhibition.neurons.tau_syn_I = 5.0
 
-    defaults.projections.stimulus.weight = 0.002
+    defaults.projections.stimulus.weight = 0.0021
     defaults.projections.stimulus.jitter = 0.00001
     defaults.projections.accumulation.weight = 0.015
     defaults.projections.inhibition.weight = 0.3
-    defaults.projections.forward_inhibition.probability = 0.05
-    defaults.projections.forward_inhibition.weight = 0.00001
+    defaults.projections.forward_inhibition.probability = 1.0
+    defaults.projections.forward_inhibition.weight = 0.000006
 
     def __init__(self, params={}):
         # verify correct PyNN setup
@@ -97,45 +98,57 @@ class SpatialPooler(object):
         # calculate connectivity matrix
         n_columns = self.parameters.populations.columns.size
         n_inputs = self.parameters.config.input_size
-        self.connections = (np.random.uniform(0, 1, n_columns*n_inputs) > 0.80).reshape(len(self.columns), n_inputs).astype(np.int64)
+        self.connections = (np.random.uniform(0, 1, n_columns*n_inputs) > 0.60).reshape(len(self.columns), n_inputs).astype(np.int64)
+        self.permanences = np.random.normal(.3, .05, n_columns*n_inputs).reshape(len(self.columns), n_inputs)
 
     def calculate_activity(self, data):
         """Calculate activity patterns for given data"""
 
         activity = []
         for i, d in enumerate(data):
-            activity.append(np.dot(self.connections, d))
+            cm = (self.connections) & (self.permanences > 0.3).astype(np.int64)
+            activity.append(np.dot(cm, d))
 
         return activity
 
-    def compute(self, data):
+    def compute(self, data, learn=True):
         """Perform the actual computation"""
 
         timestep = self.parameters.config.timestep
-        activity = np.array(self.calculate_activity(data))
-
-        # generate spike train from given input vector data
-        pos = 0
-        train = np.ndarray((np.sum(activity), 2))
-        for i, d in enumerate(data):
-            for j in range(len(self.stimulus)):
-                spikes = np.sort(np.random.normal(1.0 + i*timestep, 0.01, activity[i][j]))
-                train[pos:pos+activity[i][j],:] = np.vstack([np.ones(spikes.size)*j, spikes]).T
-                pos += activity[i][j]
-
-        # set stimulus
-        for j, s in enumerate(self.stimulus):
-            s.spike_times = train[train[:,0] == j,1]
 
         # run simulation
-        for i in range(len(data)):
+        for i, d in enumerate(data):
+            t = pynn.get_current_time()
+            d = d.astype(np.int32)
+            activity = np.array(self.calculate_activity([d]))
+            train = np.ndarray((np.sum(activity), 2))
+            pos = 0
+            for j in range(len(self.stimulus)):
+                spikes = np.sort(np.random.normal(1.0 + t, 0.01, activity[0][j]))
+                train[pos:pos+activity[0][j],:] = np.vstack([np.ones(spikes.size)*j, spikes]).T
+                pos += activity[0][j]
+            for j, s in enumerate(self.stimulus):
+                s.spike_times = train[train[:,0] == j,1]
+
             pynn.run(timestep)
 
             # extract spikes and calculate activity
             spikes = self.columns.getSpikes()
-            mask = (spikes[:,1] > i*timestep) & (spikes[:,1] < (i + 1)*timestep)
-            activity = np.unique(spikes[mask,0]).astype(np.int32)
-            yield activity
+            mask = (spikes[:,1] > t) & (spikes[:,1] < t + timestep)
+            active_columns = np.unique(spikes[mask,0]).astype(np.int32)
+            yield active_columns
+
+            if learn > 0:
+                # wake up, school's starting in five minutes!
+                c = np.zeros(self.permanences.shape[0], dtype=np.bool)
+                c[active_columns] = 1
+                d = d.astype(np.bool)
+                self.permanences[np.outer(c, d)] += 0.01
+                self.permanences[np.outer(c, np.invert(d))] -= 0.01
+                self.permanences = np.minimum(np.maximum(self.permanences, 0), 1)
+
+                if type(learn) == int:
+                    learn -= 1
 
     def get_spikes(self):
         """Extract spike times from sources as well as columns"""
