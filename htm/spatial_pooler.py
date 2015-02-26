@@ -28,15 +28,15 @@ class SpatialPooler(object):
     defaults.populations.inhibition.neurons.e_rev_I = -80.0
     defaults.populations.inhibition.neurons.v_reset = -70.0
     defaults.populations.inhibition.neurons.v_thresh = -60.0
-    defaults.populations.inhibition.neurons.tau_m = 0.2
+    defaults.populations.inhibition.neurons.tau_m = 0.1
     defaults.populations.inhibition.neurons.tau_refrac = 5.0
-    defaults.populations.inhibition.neurons.tau_syn_E = 5.0
+    defaults.populations.inhibition.neurons.tau_syn_E = 10.0
     defaults.populations.inhibition.neurons.tau_syn_I = 5.0
 
     defaults.projections.stimulus.weight = 0.0021
-    defaults.projections.stimulus.jitter = 0.00001
-    defaults.projections.accumulation.weight = 0.015
-    defaults.projections.inhibition.weight = 0.3
+    defaults.projections.stimulus.jitter = 0.000005
+    defaults.projections.accumulation.weight = 0.023
+    defaults.projections.inhibition.weight = 0.6
     defaults.projections.forward_inhibition.probability = 1.0
     defaults.projections.forward_inhibition.weight = 0.000006
 
