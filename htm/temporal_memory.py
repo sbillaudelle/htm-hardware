@@ -14,7 +14,7 @@ pynn.setup()
 # input populations
 proximal_input = pynn.Population(1, pynn.SpikeSourceArray, {'spike_times': np.arange(STEPS)*TIMESTEP + 0.01})
 distal_input = pynn.Population(N, pynn.SpikeSourceArray)
-distal_input[0].spike_times = np.array([55.0, 55.1, 55.2, 55.3])
+distal_input[0].spike_times = np.array([55.0, 55.1, 55.2, 55.3, 155.0, 155.1, 155.2, 155.3])
 distal_input[1].spike_times = np.array([5.0, 5.1, 5.2, 5.3, 155.0, 155.1, 155.2, 155.3, 205.0, 205.1, 205.2, 205.3])
 
 # create compartments
@@ -39,7 +39,7 @@ params_inhibitory = {
         'v_thresh': -55.0,
         'tau_m': 30.0,
         'tau_refrac': 1.0,
-        'tau_syn_E': 2.0,
+        'tau_syn_E': 5.0,
         'tau_syn_I': 15.0
         }
 inhibitory = pynn.Population(N, pynn.IF_cond_exp, params_inhibitory, structure=pynn.space.Line())
@@ -52,17 +52,18 @@ params_soma = {
         'v_thresh': -50.0,
         'tau_m': 15.0,
         'tau_refrac': 5.0,
-        'tau_syn_E': 6.0,
+        'tau_syn_E': 8.0,
         'tau_syn_I': 6.0
         }
 soma = pynn.Population(N, pynn.IF_cond_exp, params_soma, structure=pynn.space.Line())
 
 # connect populations
-pynn.Projection(proximal_input, soma, pynn.AllToAllConnector(weights=0.1)) # 1
-pynn.Projection(proximal_input, inhibitory, pynn.AllToAllConnector(weights=0.05)) # 2
+pynn.Projection(proximal_input, soma, pynn.AllToAllConnector(weights=0.08)) # 1
+pynn.Projection(proximal_input, inhibitory, pynn.AllToAllConnector(weights=0.03)) # 2
 pynn.Projection(distal_input, distal, pynn.OneToOneConnector(weights=0.025))
-pynn.Projection(distal, inhibitory, pynn.OneToOneConnector(weights=0.15), target='inhibitory') # 3
-pynn.Projection(inhibitory, soma, pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.1), target='inhibitory') # 4
+pynn.Projection(distal, inhibitory, pynn.OneToOneConnector(weights=0.1), target='inhibitory') # 3
+pynn.Projection(distal, soma, pynn.OneToOneConnector(weights=0.05), target='excitatory') # 3
+pynn.Projection(inhibitory, soma, pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='inhibitory') # 4
 
 soma.record()
 distal.record()
