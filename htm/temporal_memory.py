@@ -5,7 +5,7 @@ import addict
 
 import pyNN.nest as pynn
 
-N = 3
+from htm.neuron_model import iaf_4_cond_exp
 
 TIMESTEP = 50.
 STEPS = 6
@@ -32,7 +32,7 @@ class TemporalMemory(object):
     
     defaults.populations.inhibitory.neurons.v_rest = -65.0
     defaults.populations.inhibitory.neurons.e_rev_E = 0.0
-    defaults.populations.inhibitory.neurons.e_rev_I = -50.0
+    defaults.populations.inhibitory.neurons.e_rev_I = -55.0
     defaults.populations.inhibitory.neurons.v_reset = -65.0
     defaults.populations.inhibitory.neurons.v_thresh = -55.0
     defaults.populations.inhibitory.neurons.tau_m = 30.0
@@ -40,15 +40,18 @@ class TemporalMemory(object):
     defaults.populations.inhibitory.neurons.tau_syn_E = 5.0
     defaults.populations.inhibitory.neurons.tau_syn_I = 15.0
                 
-    defaults.populations.soma.neurons.v_rest = -65.0
-    defaults.populations.soma.neurons.e_rev_E = 0.0
-    defaults.populations.soma.neurons.e_rev_I = -90.0
-    defaults.populations.soma.neurons.v_reset = -70.0
-    defaults.populations.soma.neurons.v_thresh = -50.0
-    defaults.populations.soma.neurons.tau_m = 15.0
-    defaults.populations.soma.neurons.tau_refrac = 5.0
-    defaults.populations.soma.neurons.tau_syn_E = 8.0
-    defaults.populations.soma.neurons.tau_syn_I = 6.0
+    defaults.populations.soma.neurons.E_L = -65.0
+    defaults.populations.soma.neurons.E_syn_1 = 0.0
+    defaults.populations.soma.neurons.E_syn_2 = -90.0
+    defaults.populations.soma.neurons.E_syn_3 = -50.0
+    defaults.populations.soma.neurons.V_reset = -70.0
+    defaults.populations.soma.neurons.V_th = -50.0
+    defaults.populations.soma.neurons.g_L = 16.667*4
+    defaults.populations.soma.neurons.C_m = 250.0*4
+    defaults.populations.soma.neurons.t_ref = 5.0
+    defaults.populations.soma.neurons.tau_syn_1 = 8.0
+    defaults.populations.soma.neurons.tau_syn_2 = 6.0
+    defaults.populations.soma.neurons.tau_syn_3 = 25.0
     
     defaults.projections.stimulus.jitter = 0.0002
 
@@ -60,36 +63,40 @@ class TemporalMemory(object):
         self.create()
         self.connect()
 
-
     def create(self):
+        n = self.parameters.config.n_cells
         # input populations
         self.proximal_input = pynn.Population(1, pynn.SpikeSourceArray, {'spike_times': np.arange(STEPS)*TIMESTEP + 0.01})
-        self.distal_input = pynn.Population(N, pynn.SpikeSourceArray)
+        self.distal_input = pynn.Population(2*n, pynn.SpikeSourceArray)
         self.distal_input[0].spike_times = np.array([55.0, 55.1, 55.2, 55.3, 155.0, 155.1, 155.2, 155.3])
         self.distal_input[1].spike_times = np.array([5.0, 5.1, 5.2, 5.3, 155.0, 155.1, 155.2, 155.3, 205.0, 205.1, 205.2, 205.3])
+        self.distal_input[3].spike_times = np.array([155.0, 155.1, 155.2, 155.3])
 
         # create compartments
-        self.distal = pynn.Population(N, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
-        self.inhibitory = pynn.Population(N, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
-        self.soma = pynn.Population(N, pynn.IF_cond_exp, self.parameters.populations.soma.neurons, structure=pynn.space.Line())
+        self.distal = pynn.Population(2*n, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
+        self.inhibitory = pynn.Population(n, pynn.IF_cond_exp, self.parameters.populations.inhibitory.neurons, structure=pynn.space.Line())
+        self.soma = pynn.Population(n, iaf_4_cond_exp, self.parameters.populations.soma.neurons, structure=pynn.space.Line())
+        self.soma.initialize('V_m', -65.)
         
         self.soma.record()
         self.distal.record()
         self.inhibitory.record()
 
         if self.parameters.config.record_traces:
-            self.soma.record_v()
+            self.soma._record('V_m')
             self.distal.record_v()
             self.inhibitory.record_v()
 
     def connect(self):
         # connect populations
-        pynn.Projection(self.proximal_input, self.soma, pynn.AllToAllConnector(weights=0.08)) # 1
-        pynn.Projection(self.proximal_input, self.inhibitory, pynn.AllToAllConnector(weights=0.03)) # 2
+        pynn.Projection(self.proximal_input, self.soma, pynn.AllToAllConnector(weights=0.08), target='SYN_1') # 1
+        pynn.Projection(self.proximal_input, self.inhibitory, pynn.AllToAllConnector(weights=0.04)) # 2
         pynn.Projection(self.distal_input, self.distal, pynn.OneToOneConnector(weights=0.025))
-        pynn.Projection(self.distal, self.inhibitory, pynn.OneToOneConnector(weights=0.1), target='inhibitory') # 3
-        pynn.Projection(self.distal, self.soma, pynn.OneToOneConnector(weights=0.05), target='excitatory') # 3
-        pynn.Projection(self.inhibitory, self.soma, pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='inhibitory') # 4
+        pynn.Projection(self.inhibitory, self.soma, pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='SYN_2') # 4
+
+        for i in range(self.parameters.config.n_cells):
+            pynn.Projection(self.distal[i*2:(i + 1)*2], pynn.PopulationView(self.inhibitory, [i]), pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
+            pynn.Projection(self.distal[i*2:(i + 1)*2], pynn.PopulationView(self.soma, [i]), pynn.AllToAllConnector(weights=0.1), target='SYN_3') # 3
 
 
     def compute(self):
@@ -104,7 +111,7 @@ class TemporalMemory(object):
     def get_traces(self):
         assert self.parameters.config.record_traces
         
-        trace_soma = self.soma.get_v()
+        trace_soma = self.soma.recorders['V_m'].get()
         trace_inhibitory = self.inhibitory.get_v()
         trace_distal = self.distal.get_v()
         
@@ -124,13 +131,20 @@ if __name__ == '__main__':
 
     plt.figure(figsize=(6.2, 7.0))
 
-    for cell in range(N):
+    n = tm.parameters.config.n_cells
+
+    for cell in range(n):
         grid = gs.GridSpec(3, 1)
-        grid.update(bottom=a + c*(N-cell) + (N-cell)*(1 - (2*a + (N-1)*c))/N, top=a + c*(N-cell) + (N-cell+1)*(1 - (2*a + (N-1)*c))/N, hspace=b)
+        grid.update(bottom=a + c*(n-cell) + (n-cell)*(1 - (2*a + (n-1)*c))/n, top=a + c*(n-cell) + (n-cell+1)*(1 - (2*a + (n-1)*c))/n, hspace=b)
 
         for t in np.arange(TIMESTEP, (STEPS+1)*TIMESTEP, TIMESTEP):
             # plot prediction
-            mask = (spikes_distal[:,0] == cell) & (spikes_distal[:,1] > t - TIMESTEP) & (spikes_distal[:,1] < t)
+            mask = (spikes_distal[:,0] == 2*cell) & (spikes_distal[:,1] > t - TIMESTEP) & (spikes_distal[:,1] < t)
+            if spikes_distal[mask].size > 0:
+                ax = plt.subplot(grid[0, 0])
+                ax.axvspan(t - TIMESTEP, t, fc='lightyellow', alpha=1)
+            
+            mask = (spikes_distal[:,0] == 2*cell + 1) & (spikes_distal[:,1] > t - TIMESTEP) & (spikes_distal[:,1] < t)
             if spikes_distal[mask].size > 0:
                 ax = plt.subplot(grid[0, 0])
                 ax.axvspan(t - TIMESTEP, t, fc='lightyellow', alpha=1)
@@ -158,7 +172,8 @@ if __name__ == '__main__':
         ax.set_title("Cell {0}".format(cell + 1), size=10.0)
         ax.set_ylim((-72.0, -48.0))
         ax.set_ylabel("$V_\\text{distal}$ [\si{\milli\\volt}]", size=6.0)
-        ax.plot(trace_distal[trace_distal[:,0] == cell,1], trace_distal[trace_distal[:,0] == cell,2])
+        ax.plot(trace_distal[trace_distal[:,0] == 2*cell,1], trace_distal[trace_distal[:,0] == 2*cell,2])
+        ax.plot(trace_distal[trace_distal[:,0] == 2*cell + 1,1], trace_distal[trace_distal[:,0] == 2*cell + 1,2])
 
         ax = plt.subplot(grid[1, 0])
         ax.grid(False)
@@ -176,7 +191,7 @@ if __name__ == '__main__':
         ax = plt.subplot(grid[2, 0])
         ax.grid(False)
         ax.set_ylim((-72.0, -48.0))
-        if cell == N-1:
+        if cell == n-1:
             ax.set_xlabel("$t$ [\si{\milli\second}]", size=6.0)
         else:
             ax.tick_params(\
