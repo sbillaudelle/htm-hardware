@@ -150,6 +150,16 @@ Lorem ipsum dolor sit amet.
 	\begin{center}
 		\includegraphics{../circuitry/column.pdf}
 	\end{center}
-	\caption{Implementation of the temporal memory not including plasticity. Every HTM cell within a column is modeled with three individual LIF cells modeling different compartments (distal dendrites \emph{D}, soma \emph{S} and a lateral inhibition segment \emph{I} -- which is not biologically inspired). Per column, there exist multiple cell triples as well as one ``head'' cell \emph{P} which participates in the columnar competition and collects proximal input for the whole column. Activity of this cell is forwarded to the individual soma cells of the column \protect\circled{green}{1}. Without a previous prediction, this results in all soma cells firing. However, the distal compartment sums over the input of the previous time step. With a threshold being reached, the inhibitory compartment is depolarized by forwarding an event on \protect\circled{green}{3}. Together with proximal input \protect\circled{green}{2}, the inhibitory partition fires and inhibits all other cells in the column \protect\circled{green}{4}.}
+	\caption{Implementation of the temporal memory not including plasticity. Every HTM cell within a column is modeled with three individual LIF cells modeling different compartments (distal dendrites \emph{D}, soma \emph{S} and a lateral inhibition segment \emph{I} -- which is not biologically inspired). Per column, there exist multiple cell triples as well as one ``head'' cell \emph{P} which participates in the columnar competition and collects proximal input for the whole column. Activity of this cell is forwarded to the individual soma cells of the column \protect\circled{green}{1}. Without a previous prediction, this results in all soma cells firing. However, the distal compartment sums over the input of the previous time step. When a threshold is reached, the inhibitory compartment as well as the soma are depolarized \protect\circled{green}{3} \protect\circled{green}{4}. Together with proximal input \protect\circled{green}{2}, the inhibitory partition fires and inhibits all other cells in the column \protect\circled{green}{5}.}
 	\label{fig:static_temporal_memory}
+\end{figure}
+
+Lorem ipsum dolor sit amet.
+
+\begin{figure}
+	\begin{center}
+		\input{assets/temporal_memory/live.pgf}
+	\end{center}
+	\caption{A \gls{lif} neuron based temporal memory implementation correctly predicting different patterns. Predicted cells are marked blue, active cells in purple. The network spans 128 columns with each of their eight \gls{htm} cells collecting distal stimuli via two dendritic segments. Connectivity for the distal inputs was configured externally. The model was presented three disjunct sequences of size three. The individual patterns were separated by a random input \gls{sdr}.}
+	\label{fig:static_temporal_memory_live}
 \end{figure}
