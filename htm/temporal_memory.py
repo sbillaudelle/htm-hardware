@@ -7,11 +7,6 @@ import pyNN.nest as pynn
 
 from htm.neuron_model import iaf_4_cond_exp
 
-TIMESTEP = 50.
-STEPS = 6
-
-pynn.setup()
-
 class TemporalMemory(object):
     defaults = addict.Dict()
 
@@ -49,7 +44,7 @@ class TemporalMemory(object):
     defaults.populations.soma.neurons.g_L = 16.667*4
     defaults.populations.soma.neurons.C_m = 250.0*4
     defaults.populations.soma.neurons.t_ref = 5.0
-    defaults.populations.soma.neurons.tau_syn_1 = 8.0
+    defaults.populations.soma.neurons.tau_syn_1 = 9.0
     defaults.populations.soma.neurons.tau_syn_2 = 6.0
     defaults.populations.soma.neurons.tau_syn_3 = 25.0
     
@@ -64,18 +59,16 @@ class TemporalMemory(object):
         self.connect()
 
     def create(self):
-        n = self.parameters.config.n_cells
+        n_columns = self.parameters.config.n_columns
+        n_cells = self.parameters.config.n_cells
         # input populations
-        self.proximal_input = pynn.Population(1, pynn.SpikeSourceArray, {'spike_times': np.arange(STEPS)*TIMESTEP + 0.01})
-        self.distal_input = pynn.Population(2*n, pynn.SpikeSourceArray)
-        self.distal_input[0].spike_times = np.array([55.0, 55.1, 55.2, 55.3, 155.0, 155.1, 155.2, 155.3])
-        self.distal_input[1].spike_times = np.array([5.0, 5.1, 5.2, 5.3, 155.0, 155.1, 155.2, 155.3, 205.0, 205.1, 205.2, 205.3])
-        self.distal_input[3].spike_times = np.array([155.0, 155.1, 155.2, 155.3])
+        self.proximal_input = pynn.Population(n_columns, pynn.SpikeSourceArray)
+        self.distal_input = pynn.Population(2*n_columns*n_cells, pynn.SpikeSourceArray)
 
         # create compartments
-        self.distal = pynn.Population(2*n, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
-        self.inhibitory = pynn.Population(n, pynn.IF_cond_exp, self.parameters.populations.inhibitory.neurons, structure=pynn.space.Line())
-        self.soma = pynn.Population(n, iaf_4_cond_exp, self.parameters.populations.soma.neurons, structure=pynn.space.Line())
+        self.distal = pynn.Population(2*n_columns*n_cells, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
+        self.inhibitory = pynn.Population(n_columns*n_cells, pynn.IF_cond_exp, self.parameters.populations.inhibitory.neurons, structure=pynn.space.Line())
+        self.soma = pynn.Population(n_columns*n_cells, iaf_4_cond_exp, self.parameters.populations.soma.neurons, structure=pynn.space.Line())
         self.soma.initialize('V_m', -65.)
         
         self.soma.record()
@@ -88,25 +81,55 @@ class TemporalMemory(object):
             self.inhibitory.record_v()
 
     def connect(self):
+        n_cells = self.parameters.config.n_cells
+        
         # connect populations
-        pynn.Projection(self.proximal_input, self.soma, pynn.AllToAllConnector(weights=0.08), target='SYN_1') # 1
-        pynn.Projection(self.proximal_input, self.inhibitory, pynn.AllToAllConnector(weights=0.04)) # 2
         pynn.Projection(self.distal_input, self.distal, pynn.OneToOneConnector(weights=0.025))
-        pynn.Projection(self.inhibitory, self.soma, pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='SYN_2') # 4
 
-        for i in range(self.parameters.config.n_cells):
-            pynn.Projection(self.distal[i*2:(i + 1)*2], pynn.PopulationView(self.inhibitory, [i]), pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
-            pynn.Projection(self.distal[i*2:(i + 1)*2], pynn.PopulationView(self.soma, [i]), pynn.AllToAllConnector(weights=0.1), target='SYN_3') # 3
+        for i in range(self.parameters.config.n_columns):
+            pynn.Projection(self.inhibitory[i*n_cells:(i + 1)*n_cells], self.soma[i*n_cells:(i + 1)*n_cells], pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='SYN_2') # 4
+            pynn.Projection(pynn.PopulationView(self.proximal_input, [i]), self.soma[i*n_cells:(i + 1)*n_cells], pynn.AllToAllConnector(weights=0.08), target='SYN_1') # 1
+            pynn.Projection(pynn.PopulationView(self.proximal_input, [i]), self.inhibitory[i*n_cells:(i + 1)*n_cells], pynn.AllToAllConnector(weights=0.042)) # 2 # TODO: slightly to high! # for network: 0.042
+            
+            for j in range(self.parameters.config.n_cells):
+                pynn.Projection(self.distal[i*n_cells*2 + j*2:i*n_cells*2 + (j + 1)*2], pynn.PopulationView(self.inhibitory, [i*n_cells + j]), pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
+                pynn.Projection(self.distal[i*n_cells*2 + j*2:i*n_cells*2 + (j + 1)*2], pynn.PopulationView(self.soma, [i*n_cells + j]), pynn.AllToAllConnector(weights=0.15), target='SYN_3') # 3
 
+    def set_distal_connections(self, connections):
+        for src, tgt, sgm in connections:
+            pynn.Projection(pynn.PopulationView(self.soma, [int(src)]), pynn.PopulationView(self.distal, [2*int(tgt) + int(sgm)]), pynn.OneToOneConnector(weights=0.014))
 
-    def compute(self):
-        pynn.run(STEPS*TIMESTEP)
+    def compute(self, proximal, distal=None):
+        if distal is not None:
+            for i, times in distal.iteritems():
+                self.distal_input[i].spike_times = times
 
-        spikes_soma = self.soma.getSpikes()
-        spikes_inhibitory = self.inhibitory.getSpikes()
-        spikes_distal = self.distal.getSpikes()
+        active = []
+        predictive = []
 
-        return (spikes_soma, spikes_inhibitory, spikes_distal)
+        if not (isinstance(proximal[0], list) or isinstance(proximal[0], np.ndarray)):
+            proximal = [proximal]
+
+        for p in proximal:
+            t = pynn.get_current_time()
+            for c in p:
+                self.proximal_input[int(c)].spike_times = np.array([t + 0.01])
+            pynn.run(self.parameters.config.timestep)
+
+            spikes_soma = self.soma.getSpikes()
+            mask = (spikes_soma[:,1] >= t) & (spikes_soma[:,1] < t + self.parameters.config.timestep)
+            active.append(np.unique(spikes_soma[mask,0]))
+
+            spikes_distal = self.distal.getSpikes()
+            mask = (spikes_distal[:,1] >= t) & (spikes_distal[:,1] < t + self.parameters.config.timestep)
+            predictive.append(np.unique(spikes_distal[mask,0].astype(np.int16)/2))
+
+        return (active, predictive)
+        #spikes_soma = self.soma.getSpikes()
+        #spikes_inhibitory = self.inhibitory.getSpikes()
+        #spikes_distal = self.distal.getSpikes()
+
+        #return (spikes_soma, spikes_inhibitory, spikes_distal)
 
     def get_traces(self):
         assert self.parameters.config.record_traces
@@ -118,6 +141,8 @@ class TemporalMemory(object):
         return (trace_soma, trace_inhibitory, trace_distal)
 
 if __name__ == '__main__':
+    pynn.setup(threads=4)
+
     a = 0.05
     b = 0.10
     c = 0.06
@@ -125,8 +150,13 @@ if __name__ == '__main__':
     params = addict.Dict()
     params.config.record_traces = True
     tm = TemporalMemory(params)
-
-    spikes_soma, spikes_inhibitory, spikes_distal = tm.compute()
+    
+    distal_stimulus = {
+        0: np.array([55.0, 55.1, 55.2, 55.3, 155.0, 155.1, 155.2, 155.3]),
+        1: np.array([5.0, 5.1, 5.2, 5.3, 155.0, 155.1, 155.2, 155.3, 205.0, 205.1, 205.2, 205.3]),
+        3: np.array([155.0, 155.1, 155.2, 155.3])
+        }
+    active, predictive = tm.compute(np.zeros((6, 1)), distal=distal_stimulus)
     trace_soma, trace_inhibitory, trace_distal = tm.get_traces()
 
     plt.figure(figsize=(6.2, 7.0))
@@ -137,23 +167,20 @@ if __name__ == '__main__':
         grid = gs.GridSpec(3, 1)
         grid.update(bottom=a + c*(n-cell) + (n-cell)*(1 - (2*a + (n-1)*c))/n, top=a + c*(n-cell) + (n-cell+1)*(1 - (2*a + (n-1)*c))/n, hspace=b)
 
-        for t in np.arange(TIMESTEP, (STEPS+1)*TIMESTEP, TIMESTEP):
+        timestep = tm.parameters.config.timestep
+        for i, prd in enumerate(predictive):
+            t = i*timestep
             # plot prediction
-            mask = (spikes_distal[:,0] == 2*cell) & (spikes_distal[:,1] > t - TIMESTEP) & (spikes_distal[:,1] < t)
-            if spikes_distal[mask].size > 0:
+            if cell in prd:
                 ax = plt.subplot(grid[0, 0])
-                ax.axvspan(t - TIMESTEP, t, fc='lightyellow', alpha=1)
+                ax.axvspan(t, t + timestep, fc='lightyellow', alpha=1)
             
-            mask = (spikes_distal[:,0] == 2*cell + 1) & (spikes_distal[:,1] > t - TIMESTEP) & (spikes_distal[:,1] < t)
-            if spikes_distal[mask].size > 0:
-                ax = plt.subplot(grid[0, 0])
-                ax.axvspan(t - TIMESTEP, t, fc='lightyellow', alpha=1)
-            
+        for i, act in enumerate(active):
+            t = i*timestep
             # plot active cells
-            mask = (spikes_soma[:,0] == cell) & (spikes_soma[:,1] > t - TIMESTEP) & (spikes_soma[:,1] < t)
-            if spikes_soma[mask].size > 0:
+            if cell in act:
                 ax = plt.subplot(grid[2, 0])
-                ax.axvspan(t - TIMESTEP, t, fc='lightgreen', alpha=1)
+                ax.axvspan(t, t + timestep, fc='lightgreen', alpha=1)
             
             for i in range(3):
                 ax = plt.subplot(grid[i, 0])
@@ -174,6 +201,7 @@ if __name__ == '__main__':
         ax.set_ylabel("$V_\\text{distal}$ [\si{\milli\\volt}]", size=6.0)
         ax.plot(trace_distal[trace_distal[:,0] == 2*cell,1], trace_distal[trace_distal[:,0] == 2*cell,2])
         ax.plot(trace_distal[trace_distal[:,0] == 2*cell + 1,1], trace_distal[trace_distal[:,0] == 2*cell + 1,2])
+        ax.set_xlim((0, ax.get_xlim()[1]))
 
         ax = plt.subplot(grid[1, 0])
         ax.grid(False)
