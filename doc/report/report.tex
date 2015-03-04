@@ -76,9 +76,12 @@
 \setmainfont[Mapping=tex-text, ItalicFont={Linux Libertine Italic}, BoldFont={Linux Libertine Bold}]{Linux Libertine}
 %\setsansfont[Mapping=tex-text, BoldFont={Linux Biolinum Bold}]{Linux Biolinum}
 \setsansfont[Mapping=tex-text, BoldFont={Linux Libertine Bold}]{Linux Libertine}
-\setmathfont[range=\mathit]{Linux Libertine Italic}
-\setmathfont{Linux Libertine}
-%\setmathfont{Latin Modern Math}
+\setmathfont[range=\mathit/{greek}]{Linux Libertine Italic}
+\setmathfont[range=\mathit/{latin,Latin,num,Greek,greek}]{Linux Libertine O Italic}
+\setmathfont[range=\mathup/{latin,Latin,num,Greek,greek}]{Linux Libertine O}
+\setmathfont[range=\mathbfup/{latin,Latin,num,Greek,greek}]{Linux Libertine O Bold}
+\setmathfont[range=\mathbfit/{latin,Latin,num,Greek,greek}]{Linux Libertine O Bold Italic}
+\setmathfont{Latin Modern Math}
 
 \titleformat{\section}
 	{\huge\mdseries\rmfamily\scshape}{\thesection}{0.5em}{}[{}]%\titlerule[0.6pt]}]
