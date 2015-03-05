@@ -1,9 +1,29 @@
+#! /usr/bin/python2
+# -*- coding: utf-8 -*-
+
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
 import addict
 import pyNN.nest as pynn
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--columns', type=int, default=128,
+        help="number of columns")
+parser.add_argument('--active-columns', type=int, default=8,
+        help="number of active columns for each timestep")
+parser.add_argument('--cells', type=int, default=8,
+        help="number of HTM cells per column")
+parser.add_argument('--steps', type=int, default=12,
+        help="number of simulation steps")
+parser.add_argument('--save', action='store_true')
+args = parser.parse_args()
+
+import matplotlib as mpl
+if not args.save:
+    mpl.use('GtkAgg')
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gs
+
 
 from htm.temporal_memory import TemporalMemory
 
@@ -23,25 +43,26 @@ tm.set_distal_connections(connections)
 
 predictive = None
 
-stimulus = stimulus[:12]
-labels = labels[:12]
+stimulus = stimulus[:args.steps]
+labels = labels[:args.steps]
 
 X = 3
 Y = (len(stimulus) + X - 1) / X
 
-SAVE = True
-fig = plt.figure(figsize=(6.6, 8.0))
-if SAVE:
+if args.save:
+    fig = plt.figure(figsize=(6.6, 8.0))
     grid = gs.GridSpec((len(stimulus) + 1)/X, X)
     grid.update(hspace=0.1)
 else:
+    fig = plt.figure()
+    fig.canvas.mpl_connect('close_event', lambda: quit())
     plt.ion()
     ax = plt.gca()
     ax.set_xlim((-2, 65))
     ax.set_ylim((-2, 11))
 
 for i, (l, s) in enumerate(zip(labels, stimulus)):
-    if SAVE:
+    if args.save:
         ax = plt.subplot(grid[i%Y, i/Y])
     ax.cla()
     ax.text((-2 + 129)/2, 0, l.lower(), size=9, ha='center', bbox=dict(fc='white', ec='grey', alpha=0.5))
@@ -69,14 +90,11 @@ for i, (l, s) in enumerate(zip(labels, stimulus)):
     ax.set_xlim((-2, 128 + 1))
     ax.set_ylim((-0.5, 8 -0.5))
 
-    print "stm", np.where(s)[0]
-    
     if predictive is not None:
         # plot predictive cells
         x = predictive / 8
         y = predictive % 8
         ax.plot(x, y, '.', ms=12, alpha=0.4)
-        print "prd", x
     else:
         ax.plot(np.array([]), np.array([]), '.')
 
@@ -87,16 +105,12 @@ for i, (l, s) in enumerate(zip(labels, stimulus)):
     # plot active cells
     x = active / 8
     y = active % 8
-    print "act", np.unique(x)
     ax.plot(x, y, '.', ms=7)
     
-    if not SAVE:
+    if not args.save:
         plt.pause(0.1)
 
-if not SAVE:
-    plt.pause(5)
-
-if SAVE:
+if args.save:
     for i in range(len(stimulus) - 1):
         j = i + 1
         bbox_a = plt.subplot(grid[i%Y, i/Y]).get_window_extent().transformed(fig.transFigure.inverted())
@@ -112,6 +126,10 @@ if SAVE:
         xs = (x0,         x0,  (x0 + x1)/2,  (x0 + x1)/2,         x1, x1)
         line = mpl.lines.Line2D(xs, ys, transform=fig.transFigure, zorder=-1, lw=4, c='lightgrey')
         fig.lines.append(line)
+    
+    plt.savefig('sequences.pdf', bbox_inches='tight')
+    plt.savefig('sequences.pgf', bbox_inches='tight')
+else:
+    plt.ioff()
+    plt.show(block=True)
 
-plt.savefig('live.pdf', bbox_inches='tight')
-plt.savefig('live.pgf', bbox_inches='tight')
