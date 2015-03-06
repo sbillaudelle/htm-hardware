@@ -8,6 +8,7 @@ between presynaptic cells and postsynaptic dendritic segments will be dumped.
 """
 
 import string
+import numpy as np
 
 from nupic.research.fast_temporal_memory import FastTemporalMemory as TemporalMemory
 from nupic.bindings.algorithms import ConnectionsCell
@@ -20,7 +21,7 @@ parser.add_argument('--active-columns', type=int, default=8,
         help="number of active columns for each timestep")
 parser.add_argument('--cells', type=int, default=8,
         help="number of HTM cells per column")
-parser.add_argument('--alphabet-size', type=int, default=128,
+parser.add_argument('--alphabet-size', type=int, default=256,
         help="size of the alphabet to be used")
 parser.add_argument('--sequences', type=int, default=3,
         help="number of sequences to be fed into the network")
@@ -33,7 +34,6 @@ parser.add_argument('--live', action='store_true',
 args = parser.parse_args()
 
 if args.live:
-    import numpy as np
     import matplotlib as mpl
     mpl.use('GtkAgg')
     import matplotlib.pyplot as plt
@@ -58,7 +58,7 @@ tm = TemporalMemory(
 alphabet = []
 for i in range(args.alphabet_size):
     alphabet.append(np.zeros(args.alphabet_size, dtype=np.int16))
-    alphabet[-1][np.random.choice(args.columns, args.active_columns)] = 1
+    alphabet[-1][np.random.choice(args.columns, args.active_columns, replace=False)] = 1
 
 # generate sequences
 sequences = []
@@ -70,8 +70,11 @@ for i in range(args.sequences):
 # generate stimulus and labels for each timestep
 stimulus = []
 labels = []
-for i in range(args.steps):
-    c = np.random.choice(len(sequences))
+for i in range(args.steps): # FIXME: step count is not correct
+    if i > 2:
+        c = np.random.choice(len(sequences))
+    else:
+        c = i
     sequence = sequences[c]
     for k, j in enumerate(sequence):
         stimulus.append(j)
