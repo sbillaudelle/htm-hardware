@@ -114,7 +114,7 @@ class TemporalMemory(object):
 
                 # set up connections with cellular symmetry
                 pynn.Projection(segments, inhibition,
-                        pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
+                        pynn.AllToAllConnector(weights=0.15), target='inhibitory') # 3
                 pynn.Projection(segments, soma,
                         pynn.AllToAllConnector(weights=0.15), target='SYN_3') # 3
 
