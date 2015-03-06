@@ -1,8 +1,8 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
-import addict
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
 
+import addict
+import numpy as np
 import pyNN.nest as pynn
 
 from htm.neuron_model import iaf_4_cond_exp
@@ -13,6 +13,7 @@ class TemporalMemory(object):
     defaults.config.timestep = 50.
     defaults.config.n_columns = 1
     defaults.config.n_cells = 3
+    defaults.config.n_segments = 2
     defaults.config.record_traces = False
 
     defaults.populations.distal.neurons.v_rest = -65.0
@@ -46,7 +47,7 @@ class TemporalMemory(object):
     defaults.populations.soma.neurons.t_ref = 5.0
     defaults.populations.soma.neurons.tau_syn_1 = 9.0
     defaults.populations.soma.neurons.tau_syn_2 = 6.0
-    defaults.populations.soma.neurons.tau_syn_3 = 25.0
+    defaults.populations.soma.neurons.tau_syn_3 = 20.0
     
     defaults.projections.stimulus.jitter = 0.0002
 
@@ -59,14 +60,18 @@ class TemporalMemory(object):
         self.connect()
 
     def create(self):
+        """Create all cell populations"""
+
         n_columns = self.parameters.config.n_columns
         n_cells = self.parameters.config.n_cells
+        n_segments = self.parameters.config.n_segments
+
         # input populations
         self.proximal_input = pynn.Population(n_columns, pynn.SpikeSourceArray)
-        self.distal_input = pynn.Population(2*n_columns*n_cells, pynn.SpikeSourceArray)
+        self.distal_input = pynn.Population(n_segments*n_columns*n_cells, pynn.SpikeSourceArray)
 
         # create compartments
-        self.distal = pynn.Population(2*n_columns*n_cells, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
+        self.distal = pynn.Population(n_segments*n_columns*n_cells, pynn.IF_cond_exp, self.parameters.populations.distal.neurons, structure=pynn.space.Line())
         self.inhibitory = pynn.Population(n_columns*n_cells, pynn.IF_cond_exp, self.parameters.populations.inhibitory.neurons, structure=pynn.space.Line())
         self.soma = pynn.Population(n_columns*n_cells, iaf_4_cond_exp, self.parameters.populations.soma.neurons, structure=pynn.space.Line())
         self.soma.initialize('V_m', -65.)
@@ -82,26 +87,46 @@ class TemporalMemory(object):
 
     def connect(self):
         n_cells = self.parameters.config.n_cells
+        n_segments = self.parameters.config.n_segments
         
         # connect populations
         pynn.Projection(self.distal_input, self.distal, pynn.OneToOneConnector(weights=0.025))
 
         for i in range(self.parameters.config.n_columns):
-            pynn.Projection(self.inhibitory[i*n_cells:(i + 1)*n_cells], self.soma[i*n_cells:(i + 1)*n_cells], pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='SYN_2') # 4
-            pynn.Projection(pynn.PopulationView(self.proximal_input, [i]), self.soma[i*n_cells:(i + 1)*n_cells], pynn.AllToAllConnector(weights=0.08), target='SYN_1') # 1
-            pynn.Projection(pynn.PopulationView(self.proximal_input, [i]), self.inhibitory[i*n_cells:(i + 1)*n_cells], pynn.AllToAllConnector(weights=0.042)) # 2 # TODO: slightly to high! # for network: 0.042
+            # get "compartments" for all cells in this column
+            inhibitions = self.inhibitory[i*n_cells:(i + 1)*n_cells]
+            somas = self.soma[i*n_cells:(i + 1)*n_cells]
+            proximal_input = pynn.PopulationView(self.proximal_input, [i])
+
+            # set up connections with columnar symmetry
+            pynn.Projection(inhibitions, somas,
+                    pynn.DistanceDependentProbabilityConnector('d>=1', weights=0.2), target='SYN_2') # 4
+            pynn.Projection(proximal_input, somas,
+                    pynn.AllToAllConnector(weights=0.08), target='SYN_1') # 1
+            pynn.Projection(proximal_input, inhibitions,
+                    pynn.AllToAllConnector(weights=0.042)) # 2
             
             for j in range(self.parameters.config.n_cells):
-                pynn.Projection(self.distal[i*n_cells*2 + j*2:i*n_cells*2 + (j + 1)*2], pynn.PopulationView(self.inhibitory, [i*n_cells + j]), pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
-                pynn.Projection(self.distal[i*n_cells*2 + j*2:i*n_cells*2 + (j + 1)*2], pynn.PopulationView(self.soma, [i*n_cells + j]), pynn.AllToAllConnector(weights=0.15), target='SYN_3') # 3
+                # get "compartments" for this specific cell
+                segments = self.distal[i*n_cells*n_segments + j*n_segments:i*n_cells*n_segments + (j + 1)*n_segments]
+                inhibition = pynn.PopulationView(self.inhibitory, [i*n_cells + j])
+                soma = pynn.PopulationView(self.soma, [i*n_cells + j])
+
+                # set up connections with cellular symmetry
+                pynn.Projection(segments, inhibition,
+                        pynn.AllToAllConnector(weights=0.1), target='inhibitory') # 3
+                pynn.Projection(segments, soma,
+                        pynn.AllToAllConnector(weights=0.15), target='SYN_3') # 3
 
     def set_distal_connections(self, connections):
         for src, tgt, sgm in connections:
-            pynn.Projection(pynn.PopulationView(self.soma, [int(src)]), pynn.PopulationView(self.distal, [2*int(tgt) + int(sgm)]), pynn.OneToOneConnector(weights=0.014))
+            soma = pynn.PopulationView(self.soma, [int(src)])
+            segment = pynn.PopulationView(self.distal, [2*int(tgt) + int(sgm)])
+            pynn.Projection(soma, segment, pynn.OneToOneConnector(weights=0.014))
 
     def compute(self, proximal, distal=None):
         if distal is not None:
-            for i, times in distal.iteritems():
+            for i, times in enumerate(distal):
                 self.distal_input[i].spike_times = times
 
         active = []
@@ -110,6 +135,8 @@ class TemporalMemory(object):
         if not (isinstance(proximal[0], list) or isinstance(proximal[0], np.ndarray)):
             proximal = [proximal]
 
+        timestep = self.parameters.config.timestep
+
         for p in proximal:
             t = pynn.get_current_time()
             for c in p:
@@ -117,11 +144,11 @@ class TemporalMemory(object):
             pynn.run(self.parameters.config.timestep)
 
             spikes_soma = self.soma.getSpikes()
-            mask = (spikes_soma[:,1] >= t) & (spikes_soma[:,1] < t + self.parameters.config.timestep)
+            mask = (spikes_soma[:,1] >= t) & (spikes_soma[:,1] < t + timestep)
             active.append(np.unique(spikes_soma[mask,0]))
 
             spikes_distal = self.distal.getSpikes()
-            mask = (spikes_distal[:,1] >= t) & (spikes_distal[:,1] < t + self.parameters.config.timestep)
+            mask = (spikes_distal[:,1] >= t) & (spikes_distal[:,1] < t + timestep)
             predictive.append(np.unique(spikes_distal[mask,0].astype(np.int16)/2))
 
         return (active, predictive)
