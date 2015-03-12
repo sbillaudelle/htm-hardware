@@ -5,24 +5,31 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import addict
-
+import argparse
 import pyNN.nest as pynn
 
 from htm import patterns
 from htm import sdr
 from htm.spatial_pooler import SpatialPooler
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--stimulus-weight', type=float, default=0.002)
+parser.add_argument('--forward-inhibition-weight', type=float, default=0.00008)
+parser.add_argument('--accumulation-weight', type=float, default=0.017)
+
+args = parser.parse_args()
+
 # generate input spike trains
 N_SOURCES = 10000
 
 orig = np.zeros(N_SOURCES)
-orig[np.random.choice(np.arange(N_SOURCES), 200, replace=False)] = 1
+orig[np.random.choice(np.arange(N_SOURCES), 400, replace=False)] = 1
 
 data = []
 data.append(orig)
 
 for overlap in np.linspace(0.0, 1.0, 21):
-    for i in range(5):
+    for i in range(10):
         data.append(patterns.generate_pattern(orig.copy(), overlap))
 
 data = np.array(data)
@@ -31,16 +38,16 @@ data = np.array(data)
 pynn.setup(min_delay=0.01, timestep=0.01, threads=4)
 
 params = addict.Dict()
-params.config.timestep = 80.0
-params.projections.stimulus.weight = 0.002
-params.projections.forward_inhibition.weight = 0.00008
-params.projections.accumulation.weight = 0.017
-params.populations.columns.neurons.tau_m = 20.0
-params.populations.columns.neurons.tau_syn_E = 8.0
+params.config.timestep = 50.0
+#params.projections.stimulus.weight = args.stimulus_weight
+#params.projections.forward_inhibition.weight = args.forward_inhibition_weight
+#params.projections.accumulation.weight = args.accumulation_weight
+#params.populations.columns.neurons.tau_m = 20.0
+#params.populations.columns.neurons.tau_syn_E = 8.0
 pooler = SpatialPooler(params)
 
 active = []
-for i, a in enumerate(pooler.compute(data)):
+for i, a in enumerate(pooler.compute(data, learn=False)):
     active.append(a)
     sys.stdout.write("\rComputing… [{0}/{1}]".format(i + 1, len(data)))
     sys.stdout.flush()
@@ -64,6 +71,22 @@ for i in range(len(data)):
                 sdr.overlap(orig_representation, r)
                 ])])
 
+r1 = np.zeros(1000)
+r1[active[1]] = 1
+
+r2 = np.zeros(1000)
+r2[active[2]] = 1
+
+c = 0
+for i in active[1]:
+    for j in active[2]:
+        if i == j:
+            c += 1
+print c
+
+print sdr.overlap(data[1], data[2])
+print sdr.overlap(r1, r2)
+
 # average overlaps
 averaged_overlaps = np.ndarray((0, 3))
 for o in np.unique(overlaps[:,0]):
@@ -73,7 +96,8 @@ for o in np.unique(overlaps[:,0]):
             np.array([o, np.mean(overlaps[mask,1]), np.std(overlaps[mask,1])])
             ])
 
-np.save('overlap.npy', averaged_overlaps)
+import time
+np.save('overlap_{0}.npy'.format(int(time.time())), averaged_overlaps)
 
 # plot overlaps
 plt.figure(figsize=(6.2, 4.0))
