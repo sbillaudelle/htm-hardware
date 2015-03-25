@@ -20,7 +20,7 @@ The network presented in figure~\ref{fig:spatial_pooler} follows a purely timing
 The model is extended by adding subtle feed-forward shunting inhibition. The inhibitory conductance increases with the overall input activity $\nu_\text{in}$. Since the reversal potential is configured to match the leakage potential, the conductance contributes to the leakage term
 
 \begin{align*}
-	g_\text{l}' &= g_\text{l} + g_\text{inh}(\nu_\text{in})\..
+	g_\text{l}' &= g_\text{l} + g_\text{inh}(\nu_\text{in}).
 \end{align*}
 %
 thus increasing the membrane time constant. This effectively slows down the neurons' responses and thus prolongs the decision period of the network.
