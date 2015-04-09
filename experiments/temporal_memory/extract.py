@@ -49,9 +49,9 @@ if args.live:
 tm = TemporalMemory(
         columnDimensions=(args.columns,),
         cellsPerColumn=args.cells,
-        minThreshold=args.cells - 1,
-        activationThreshold=args.cells - 0,
-        maxNewSynapseCount=args.cells
+        minThreshold=args.cells - 1 - 8,
+        activationThreshold=args.cells - 0 - 8,
+        maxNewSynapseCount=args.cells - 8
         )
 
 # generate random alphabet

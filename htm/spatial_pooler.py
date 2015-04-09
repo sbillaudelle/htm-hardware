@@ -30,15 +30,15 @@ class SpatialPooler(object):
     defaults.populations.inhibition.neurons.v_thresh = -60.0
     defaults.populations.inhibition.neurons.tau_m = 0.1
     defaults.populations.inhibition.neurons.tau_refrac = 5.0
-    defaults.populations.inhibition.neurons.tau_syn_E = 10.0
+    defaults.populations.inhibition.neurons.tau_syn_E = 15.0
     defaults.populations.inhibition.neurons.tau_syn_I = 5.0
 
     defaults.projections.stimulus.weight = 0.0021
-    defaults.projections.stimulus.jitter = 0.0002
+    defaults.projections.stimulus.jitter = 0.00005
     defaults.projections.accumulation.weight = 0.023
-    defaults.projections.inhibition.weight = 0.6
+    defaults.projections.inhibition.weight = 1.0
     defaults.projections.forward_inhibition.probability = 1.0
-    defaults.projections.forward_inhibition.weight = 0.000006
+    defaults.projections.forward_inhibition.weight = 0.0000061
 
     def __init__(self, params={}):
         # verify correct PyNN setup

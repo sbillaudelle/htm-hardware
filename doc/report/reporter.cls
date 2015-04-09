@@ -14,7 +14,6 @@
 \newif\if@final
 
 \DeclareOption{draft}{\PassOptionsToPackage{draft}{graphicx}}
-\DeclareOption{a4paper}{\PassOptionsToPackage{a4}{crop}}
 \DeclareOption{centre}{\PassOptionsToPackage{center}{crop}}
 \DeclareOption{crop}{\PassOptionsToPackage{cam}{crop}\global\@cropmarksontrue}
 \DeclareOption{nocrop}{\PassOptionsToPackage{off}{crop}\global\@cropmarksonfalse}
@@ -22,7 +21,7 @@
 \DeclareOption{noinfo}{\PassOptionsToPackage{noinfo}{crop}}
 \DeclareOption{final}{\global\@finaltrue}
 
-\ExecuteOptions{a4paper,nocrop,centre,info}
+\ExecuteOptions{letterpaper,nocrop,centre,info}
 
 \ProcessOptions
 
@@ -51,7 +50,7 @@
 \reversemarginpar
 
 \renewcommand\normalsize{%
-   \@setfontsize\normalsize{9}{11}%
+   \@setfontsize\normalsize{10}{11}%
    \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
    \abovedisplayshortskip \z@ \@plus3\p@
    \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
@@ -61,7 +60,7 @@
 \let\@bls\baselineskip
 
 \newcommand\small{%
-    \@setfontsize\small{9}{11}%
+    \@setfontsize\small{10}{11}%
     \abovedisplayskip 11\p@ minus 3\p@
     \belowdisplayskip \abovedisplayskip
     \abovedisplayshortskip \z@ plus 2\p@
@@ -71,7 +70,7 @@
        \topsep 4\p@ plus 2\p@ minus 2\p@}}
 
 \newcommand\footnotesize{%
-    \@setfontsize\footnotesize{8}{10}%
+    \@setfontsize\footnotesize{9}{10}%
     \abovedisplayskip 6\p@ minus 3\p@
     \belowdisplayskip\abovedisplayskip
     \abovedisplayshortskip \z@ plus 3\p@
@@ -79,7 +78,7 @@
     \def\@listi{\topsep 3\p@ plus 1\p@ minus 1\p@
        \parsep 2\p@ plus 1\p@ minus 1\p@\itemsep \parsep}}
        
-\def\scriptsize{\@setfontsize\scriptsize{7pt}{9pt}}
+\def\scriptsize{\@setfontsize\scriptsize{8pt}{9pt}}
 \def\tiny{\@setfontsize\tiny{5pt}{7pt}}
 \def\large{\@setfontsize\large{11.5pt}{12pt}}
 \def\Large{\@setfontsize\Large{14pt}{16}}
@@ -478,7 +477,7 @@
 \newenvironment{abstract}{%
   \begingroup
   \let\section\absection
-  \fontfamily{\sfdefault}\fontsize{8}{11}\sffamily\selectfont
+  \fontfamily{\sfdefault}\fontsize{9}{11}\sffamily\selectfont
   {\fontseries{b}\selectfont ABSTRACT}\par}
 {\endgroup\bigskip\@afterheading\@afterindentfalse\vskip 12pt plus 3pt minus 1pt}
 

@@ -1,60 +1,50 @@
+The network models presented in the previous section were simulated in software to investigate their behavior. In the following, respective experiments and their results are shown. Additionally, plasticity rules and topological requirements are discussed in respect of the \gls{hmf}.
+
 \subsection{Network Simulations}
 
 %\subsubsection{Spatial Pooler}
 
-The spatial pooler properties were investigated for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input vector was multiplied to the feed forward connectivity matrix yielding a vector $\vec{l}$ containing the number of active inputs per column. This allowed to simulate the model with only 1,000 spike sources. Each source was configured to emit $l_i$ normally distributed events within a very small time window, simulating the same number of coincident events from multiple input vector elements.
+The \emph{spatial pooler} was analyzed for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input connectivity was preprocessed in software by multiplying the stimulus vector to the connectivity matrix.
 
-A first experiment was designed to verify the basic \gls{kwta} functionality. A random pattern was presented to the network. The number of active inputs per column -- the input overlap score -- can be visualized in a histogram as shown in figure~\ref{fig:spatial_pooler_activity}. By highlighting the active columns, one can investigate the network's selection criteria. Complying with the requirements for a spatial pooler, only the rightmost bars -- representing columns with the highest input counts -- are highlighted. Furthermore, the model's capability to resolve ties between columns receiving the same input counts is demonstrated: the bar at the decision boundary was not selected as a whole but only a few columns were picked. This verifies spatial pooler property~\ref{enm:spatial_pooler_selection}.
+A first experiment was designed to verify the basic \gls{kwta} functionality. A random pattern was presented to the network. The number of active inputs per column -- the input overlap score -- can be visualized in a histogram as shown in figure~\ref{fig:spatial_pooler_activity}. By highlighting the columns activated by that specific stimulus, one can investigate the network's selection criteria. Complying with the requirements for a spatial pooler, only the rightmost bars -- representing columns with the highest input counts -- are highlighted. Furthermore, the model's capability to resolve ties between columns receiving the same input counts is demonstrated: the bar at the decision boundary was not selected as a whole but only a few columns were picked. This verifies spatial pooler property~\ref{enm:spatial_pooler_selection}.
 
-In a second scenario, input vectors with varying sparsity were fed into the network, as shown in figure~\ref{fig:spatial_pooler_sparsity}. The number of active columns stays constant across a wide range of input sparsity. Additionally the plot shows that columns must receive a minimum amount of input to become active at all. This verifies the underlaying \gls{kwta} approach as well as spatial pooler properties~\ref{enm:spatial_pooler_sparsity} and~\ref{enm:spatial_pooler_minimum}.
+In a second scenario, input vectors with varying sparsity were fed into the network, as shown in figure~\ref{fig:spatial_pooler_sparsity}. The number of active columns stays approximately constant across a wide range of input sparsity. Additionally the plot shows that columns must receive a minimum amount of input to become active at all. This verifies the underlaying \gls{kwta} approach as well as spatial pooler properties~\ref{enm:spatial_pooler_sparsity} and~\ref{enm:spatial_pooler_minimum}.
 
-To verify the general functionality of a spatial pooler, expressed in property~\ref{enm:spatial_pooler_overlap}, a third experiment was set up. We generated input data sets with a variable overlap starting from an initial random binary vector. For each stimulus, the overlap of the columnar activity with the initial dataset was calculated while sweeping the input's overlap. The resulting relation of input and output overlap scores is shown in figure~\ref{fig:spatial_pooler_overlap}. Also included are the results of a similar experiment performed with a custom Python implementation of the spatial pooler directly following the original specification \citep{numenta2011htm}. In general, the curve yielded by the \gls{lif}-based implementation matches well with the algorithmic version of the model. However, maximal and minimal overlap scores are not reached for extreme input values $0.0$ and $1.0$.
+To verify the general functionality of a spatial pooler, expressed in property~\ref{enm:spatial_pooler_overlap}, a third experiment was set up. Input data sets with a variable overlap were generated starting from an initial random binary vector. For each stimulus, the overlap of the columnar activity with the initial dataset was calculated while sweeping the input's overlap. The resulting relation of input and output overlap scores is shown in figure~\ref{fig:spatial_pooler_overlap}. Also included are the results of a similar experiment performed with a custom Python implementation of the spatial pooler directly following the original specification \citep{numenta2011htm}. Multiple simulation runs all yielded results perfectly matching the reference data, thus verifying property~\ref{enm:spatial_pooler_overlap}.
 
-\begin{figure*}
+\begin{figure}
 	\begin{center}
 		\input{assets/spatial_pooler/histo/activity.pgf}
 	\end{center}
-	\caption{Histogram showing the distribution of overlap scores individual columns see. Active columns are highlighted in this plot, showing that the $k$ columns with the most input were successfully selected.} 
+	\caption{Histogram showing the distribution of overlap scores individual columns receive. Columns activated by the spatial pooler network are highlighted. This confirms that only competitors with the highest input enter an active state. Furthermore, tie situations between columns with the same overlap score are resolved correctly.}
 	\label{fig:spatial_pooler_activity}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}
 	\begin{center}
 		\input{assets/spatial_pooler/sparsity/sparsity.pgf}
 	\end{center}
-	\caption{The columnar sparsity is shown as a dependency of the input vector's sparsity. The highlighted range contains data points deviating not more than \SI{10}{\%} from the target sparsity of \SI{4}{\%}. Error bars indicate the standard deviation across five trials. The number of active columns stays constant for a broad range of input sparsity, thus fulfilling one of the basic requirements of the spatial pooler.} 
+	\caption{The relative number of active columns is plotted against the input vector's sparsity. After a certain level of input sparsity is reached, columns start to enter active states. With higher presynaptic activity, columnar competition increases and the output sparsity reaches a plateu. The curve's exact course can be manipulated through the neurons' parameters as can the size of the plateau. Error bars indicate the standard deviation across five trials.} 
 	\label{fig:spatial_pooler_sparsity}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}
 	\begin{center}
 		\input{assets/spatial_pooler/overlap/overlap.pgf}
 	\end{center}
-	\caption{Output overlap as a dependency of the input vector's overlap. Similar input gets mapped to similar output patterns, while disjunct input results in low overlap scores. Results from a software-based implementation is included as a reference in this plot.}
+	\caption{Output overlap as a dependency of the input vector's overlap score. In each of the five simulation runs, the stimulus' was gradually changed starting from a random vector. As required for a spatial pooler, two similar input stimuli get mapped to similar output patterns, while disjunct input vectors result in low overlap scores. The simulations fully reproduce data from an existing software implementation which is also shown in this figure.}
 	\label{fig:spatial_pooler_overlap}
-\end{figure*}
+\end{figure}
 
 %\subsubsection{Learning}
-
-Realizing online learning mechanisms in neuromorphic hardware represents a huge challenge. In order to follow the \gls{htm} specification as close possible, a supervised update rule was implemented: for each time step, a matrix containing permanence values for every connection is updated according to the activity patterns of the previous time step. This allows to implement the concepts of structural plasticity presented in the original white paper. Exeriments to replace the used form of structural plasticity by a classic nearest-neighbor \gls{stdp} model did not yield the desired results.
-
-\begin{figure*}
-	\begin{center}
-		\input{assets/spatial_pooler/learning/learning.pgf}
-	\end{center}
-	\caption{Dependency of output and input overlap for a trained spatial pooler. Results of five independent simulation runs are shown as well as reference data from a custom software implementation.}
-	\label{fig:spatial_pooler_learning}
-\end{figure*}
-
-Simulation results of the chosen implementation are shown in figure~\ref{fig:spatial_pooler_learning}. For the target platform, the learning algorithms could be implemented on the \gls{ppu} which is planned for the next version of the \gls{hicann} chip \citep{friedmann2013phd}.
 
 The experiments have shown that the model presented in this section does fulfill the requirements for a spatial pooler and can be considered a solid \gls{kwta} implementation. The specific results of course depend on the individual network's size and configuration. In this case, the network -- most importantly the columnar neurons' time constants -- was configured for a relatively short time step of $T = \SI{50}{\milli\second}$. By choosing different parameter sets, the network can be tuned towards different operational scenarios, e.g. further increasing the model's stability.
 
 %\subsubsection{Temporal Memory}
 
-Lorem ipsum dolor sit amet.
+The \emph{temporal memory} was verified in a first sequence prediction experiment. A reference software implementation was trained with three disjunct sequences of length three. Consecutive sequences were separated by a random input pattern. The trained network's lateral connectivity was dumped and loaded in a simulation. When presented with the same stimulus, the \gls{lif}-based implementation was able to correctly predict sequences, as shown in figure~\ref{fig:static_temporal_memory_live}.
 
-\begin{figure*}
+\begin{figure*}[p]
 	\begin{center}
 		\input{assets/temporal_memory/live.pgf}
 	\end{center}
@@ -64,4 +54,26 @@ Lorem ipsum dolor sit amet.
 
 \subsection{Learning Algorithms}
 
-\subsection{Place and Route}
+Realizing online learning mechanisms in neuromorphic hardware is a challenge by itself, especially for accelerated systems. While the \gls{hmf} features implementations of nearest-neighbor \gls{stdp} and \gls{stp} \citep{friedmann13plasticity,billaudelle14stp}, more complex update algorithms are hard to implement. Numenta's networks are based on custom structural plasticity rules which go beyond traditional mechanisms.
+
+The spatial pooler's stimulus changes drastically for learned input patterns. Verification of its functionality under these conditions is important. In order to follow the \gls{htm} specification as closely possible, a supervised update rule was implemented in an outer loop: for each time step, a matrix containing the connections' permanence values is updated according to the activity patterns of the previous time step. This allows to implement the concepts of structural plasticity presented in the original whitepaper. Exeriments to replace the original type of structural plasticity by a classic nearest-neighbor \gls{stdp} model did not yield the desired results: in contrast to conventional plasticity mechanisms, \gls{htm} algorithms apply noncausal updates in case of no presynaptic plasticity. Simulation results of the implementation described above are shown in figure~\ref{fig:spatial_pooler_learning}. For the target platform, the learning algorithms could be implemented on the \gls{ppu} which is planned for the next version of the \gls{hicann} chip \citep{friedmann2013phd}.
+
+\begin{figure}
+	\begin{center}
+		\input{assets/spatial_pooler/learning/learning.pgf}
+	\end{center}
+	\caption{Dependency of output and input overlap for a trained spatial pooler. Results of five independent simulation runs are shown as well as reference data from a custom software implementation.}
+	\label{fig:spatial_pooler_learning}
+\end{figure}
+
+\subsection{Map and Route}
+
+Applying abstract network models to the hardware platform requires algorithms for placing the neuron populations and routing the synaptic connections. In a best-case scenario, this processing step results in an isomorphic projection of the network graph to the hardware topology. For networks with extreme connectivity requirements, however, synaptic losses must be expected.
+
+Mapping the simulated networks does not represent a challenge for the routing algorithms. The temporal memory can be projected to a single wafer without synaptic loss. The same still applies with assumed lateral all-to-all connectivity resulting in approximately 2 million synapses. The latter network corresponds to a network with a potential pool of \SI{100}{\%} which would allow the exploration of learning algorithms even without creating and pruning hardware synapses.
+
+On the hardware platform, a tradeoff between the number of afferent connections per cell and the number of neurons must be taken into consideration: while it is possible to connect the dendritic membrane circuits such that a single neuron can listen on roughly \num{14e3} synases, such a network could only consist of approximetaly \num{3e3} neurons per wafer. With just 226 synapses, just under \num{200e3} neurons can be allocated per wafer.
+
+Scaling up the proof-of-concept models to a size useful for production purposes, however, challenges the hardware topology as well as the projection algorithms.
+
+A minimal useful \gls{htm} network spans 1024 columns with 8 cells each. In such a scenario the neurons would receive lateral input on 32 dendritic segments. Allowing approximately \num{1e3} afferent connections per dendritic segment, this network could be realized on approximately \num{1e6} dendritic membrane circuits, or 6 wafers. The existing system set up for the \gls{bss} would suffice for this scenario. Even larger networks could be brought to the \gls{hbp}'s platform.

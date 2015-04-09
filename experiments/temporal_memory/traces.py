@@ -44,8 +44,8 @@ for ts, p in enumerate(predictions[1:]):
 active, predictive = tm.compute(np.zeros((args.steps, 1)), distal=distal_stimulus)
 trace_soma, trace_inhibitory, trace_distal = tm.get_traces()
 
-#plt.figure(figsize=(6.6, 7.0))
-plt.figure(figsize=(16.0, 7.0))
+plt.figure(figsize=(6.6, 7.0))
+#plt.figure(figsize=(16.0, 7.0))
 
 a = 0.05
 b = 0.10

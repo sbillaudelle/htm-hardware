@@ -21,12 +21,9 @@ args = parser.parse_args()
 # generate input spike trains
 N_SOURCES = 10000
 
-orig = np.zeros(N_SOURCES)
-orig[np.random.choice(np.arange(N_SOURCES), 200, replace=False)] = 1
-
 data = []
-for sparsity in np.linspace(0.00, 0.04, 41):
-    for i in range(5):
+for sparsity in np.linspace(0.00, 0.08, 21):
+    for i in range(1):
         d = np.zeros(N_SOURCES)
         d[np.random.choice(np.arange(N_SOURCES), N_SOURCES*sparsity, replace=False)] = 1
         data.append(d)
@@ -35,16 +32,16 @@ for sparsity in np.linspace(0.00, 0.04, 41):
 pynn.setup(min_delay=0.01, timestep=0.01, threads=4)
 
 params = addict.Dict()
-params.config.timestep = 50.0
-params.projections.stimulus.weight = args.stimulus_weight
-params.projections.forward_inhibition.weight = args.forward_inhibition_weight
-params.projections.accumulation.weight = args.accumulation_weight
-params.populations.columns.neurons.tau_m = 20.0
-params.populations.columns.neurons.tau_syn_E = 8.0
+#params.config.timestep = 50.0
+#params.projections.stimulus.weight = args.stimulus_weight
+#params.projections.forward_inhibition.weight = args.forward_inhibition_weight
+#params.projections.accumulation.weight = args.accumulation_weight
+#params.populations.columns.neurons.tau_m = 20.0
+#params.populations.columns.neurons.tau_syn_E = 8.0
 pooler = SpatialPooler(params)
 
 active = []
-for i, a in enumerate(pooler.compute(data)):
+for i, a in enumerate(pooler.compute(data, learn=False)):
     active.append(a)
     sys.stdout.write("\rComputing… [{0}/{1}]".format(i + 1, len(data)))
     sys.stdout.flush()
@@ -80,8 +77,8 @@ plt.errorbar(averaged_sparsity[:,0]/float(N_SOURCES)*100, averaged_sparsity[:,1]
 plt.xlabel("input sparsity [\si{\%}]")
 plt.ylabel("output sparsity [\si{\%}]")
 
-plt.xlim((0, 4.0))
-plt.ylim((0, 20))
+plt.xlim((0, 8.0))
+plt.ylim((0, 8))
 
 import time
 np.save('sparsity_{0}.npy'.format(int(time.time())), averaged_sparsity)

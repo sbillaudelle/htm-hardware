@@ -62,7 +62,7 @@ if args.save:
     # calculate number of subplots
     width = args.width
     height = (len(stimulus) + width - 1) / width
-    fig = plt.figure(figsize=(6.6, 8.0))
+    fig = plt.figure(figsize=(10.6, 8.0))
     grid = gs.GridSpec((len(stimulus) + 1)/width, width)
     grid.update(hspace=0.1)
 else:

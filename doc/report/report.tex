@@ -1,9 +1,10 @@
 \documentclass{reporter}
 
+%\usepackage[letterpaper, left=.8in, right=.8in, top=0.8in, bottom=1.6in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[tracking]{microtype}
 \usepackage{libertine}   % With old-style figures and real smallcaps.
-\linespread{1.025}              % Palatino leads a little more leading
+\linespread{1.1}              % Palatino leads a little more leading
 
 % Euler for math and numbers
 \usepackage[euler-digits,small]{eulervm}
@@ -15,6 +16,9 @@
 \usepackage{color}
 \usepackage{pifont}
 \usepackage{natbib}
+\usepackage[hidelinks, citecolor=red]{hyperref}
+
+\sisetup{detect-all}
 
 \bibliographystyle{plainnat}
 
@@ -47,7 +51,7 @@
 \newacronym{asic}{ASIC}{Application Specific Integrated Circuit}
 \newacronym{lif}{LIF}{Leaky Integrate-and-Fire}
 \newacronym{kwta}{kWTA}{$k$-Winners-Take-All}
-\newacronym{htm}{HTM}{Hirarchical Temporal Memory}
+\newacronym{htm}{HTM}{Hierarchical Temporal Memory}
 \newacronym{sdr}{SDR}{Sparse Distributed Representation}
 \newacronym{ppu}{PPU}{Plasticity Processing Unit}
 
@@ -63,7 +67,7 @@
 \firstpage{1}
 
 \title[Porting HTM Models to a Neuromorphic Platform]{Feasibility Analysis for Porting HTM Models to the Heidelberg Neuromorphic Computing Platform}
-\author[Billaudelle]{Sebastian Billaudelle\,$^{1,*}$, Subutai Ahmad\,$^{2}$\footnote{to whom correspondence should be addressed}}
+\author[Billaudelle]{Sebastian Billaudelle\,$^{1,}$\footnote{to whom correspondance should be directed}\ , Subutai Ahmad\,$^{2}$, Jeff Hawkins\,$^{2}$}
 \address{$^{1}$Kirchhoff-Institute for Physics, Heidelberg, Germany\\
 $^{2}$Numenta, Inc., Redwood City, CA}
 
@@ -86,7 +90,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur faucibus lect
 \section{Results}
 \input{content/results.tex}
 
-\section{Conclusion and Discussion}
+\section{Conclusion and Outlook}
 \input{content/conclusion.tex}
 
 
