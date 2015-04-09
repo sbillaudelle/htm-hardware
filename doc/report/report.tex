@@ -78,7 +78,23 @@ $^{2}$Numenta, Inc., Redwood City, CA}
 \maketitle
 
 \begin{abstract}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur faucibus lectus sed lacus maximus suscipit. Pellentesque a urna eu dolor finibus consequat. Integer vulputate nisi ultrices metus consectetur pretium. Mauris quis rutrum mi, non sagittis ligula. Aenean auctor blandit placerat. Nunc quis lobortis ex, sit amet feugiat magna. Aliquam id porta massa. Fusce quis consectetur tellus. Nullam commodo pharetra lectus a dictum. Duis volutpat tellus in mauris pharetra interdum. Morbi quis enim sed justo egestas iaculis a a ligula. Fusce facilisis massa lobortis imperdiet condimentum. Sed dui lacus, condimentum sit amet ornare sit amet, dignissim tempus massa. Donec ac augue fringilla ex sagittis pellentesque interdum a risus.
+
+Hierarchical Temporal Memory (HTM) is a computational theory of machine
+intelligence based on a detailed study of the neocortex. The Heidelberg
+Neuromorphic Computing Platform, developed as part of the European Human Brain
+Project, is a mixed-signal (analog and digital) large-scale platform for
+modeling networks of spiking neurons. In this paper we present the first effort
+in porting HTM networks to this platform.  We describe a framework for
+simulating key HTM operations  using spiking network models. We then describe
+specific spatial pooling and temporal memory implementations, as well as
+simulations demonstrating that the fundamental properties are maintained. We
+discuss issues in implementing the full set of plasticity rules using STDP, and
+rough place and route calculations. Although further work is required, our
+initial studies indicate that it should be  possible to run large scale HTM
+networks (including plasticity rules) efficiently on the Heidelberg platform.
+More generally the exercise of porting high level HTM algorithms to biophysical
+neuron models is a promising area of investigation.
+
 \end{abstract}
 
 \section{Introduction}
