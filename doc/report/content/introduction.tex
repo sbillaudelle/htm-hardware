@@ -11,28 +11,70 @@ In this paper we present efforts in porting \gls{htm} networks to the \gls{hmf}.
 %\subsubsection{Spatial Pooler}
 \label{sec:spatial_pooler_properties}
 
-The \emph{spatial pooler} is designed to map a binary input vector to a set of columns. By recognizing previously seen input data, it increases stability and reduces the system's susceptibility for noise. Its behaviour can be characterized by a the following properties:
+The \emph{spatial pooler} is designed to map a binary input vector to a set of
+columns. By recognizing previously seen input data, it increases stability and
+reduces the system's susceptibility for noise. Its behaviour can be
+characterized by the following properties:
 
 \begin{enumerate}
-	\item\label{enm:spatial_pooler_sparsity} The columns' activity is sparse. Typically, 40 out of 2,048 colums are active, which is equivalent to a sparsity of \SI{2}{\%}. The number of active columns is constant in each time step and does not depend on the input sparsity.
-	\item\label{enm:spatial_pooler_minimum} A column must receive a minimum input of e.g. 15 to become active.
-	\item\label{enm:spatial_pooler_selection} The spatial pooler activates the $k$ columns which receive the most input. In case of a tie between two columns, the active column is selected randomly, e.g. through structural advantages of certain cells compared to its neighbors.
-	\item\label{enm:spatial_pooler_overlap} Stimuli with low overlap counts are mapped to patterns with low overlap counts as well, while high overlaps are projected onto columnar representations with high overlap. Thus, similar input vectors lead to a similar columnar activation, while disjunct stimuli activate different sets of cells.
+	\item\label{enm:spatial_pooler_sparsity} The columnar activity is sparse.
+	Typically, 40 out of 2,048 colums are active, which is equivalent to a sparsity
+	of \SI{2}{\%}. The number of active columns is constant in each time step and
+	does not depend on the input sparsity.
+
+	\item\label{enm:spatial_pooler_selection} The spatial pooler activates the $k$
+	columns which receive the most input. In case of a tie between two columns, the
+	active column is selected randomly, e.g. through structural advantages of
+	certain cells compared to its neighbors.
+
+	\item\label{enm:spatial_pooler_overlap} Stimuli with low pairwise overlap
+	counts are mapped to sparse columnar representations with low pairwise
+	overlap counts, while high overlaps are projected onto representations
+	with high overlap. Thus, similar input vectors lead to a similar columnar
+	activation, while disjunct stimuli activate distinct sets of cells.
+
+	\item\label{enm:spatial_pooler_minimum} A column must receive a minimum input
+	of e.g. 15 to become active.
+
 \end{enumerate}
 
 %\subsubsection{Temporal Memory}
 
-The \emph{temporal memory} operates on single cells and further processes the spatial pooler's output. Temporal sequences are learned by the network and can be used for generating predictions and highlighting anomalies. Individual cells receive stimuli from other neurons on their distal dendrites. This lateral input provides a temporal context. By modifying a cell's distal connectivity, temporal sequences can be learned and predicted. The temporal memory's behavior can be summarized by the following:
+The \emph{temporal memory} operates on single cells within columns and further
+processes the spatial pooler's output. Temporal sequences are learned by the
+network and can be used for generating predictions and highlighting anomalies.
+Individual cells receive stimuli from other neurons on their distal dendrites.
+This lateral input provides a temporal context. By modifying a cell's distal
+connectivity, temporal sequences can be learned and predicted. The temporal
+memory's behavior can be summarized by the following:
 
 \begin{enumerate}
-	\item Individual cells receive lateral input on their distal dendrites. In case a certain threshold is crossed, they enter a predictive state.
-	\item\label{enm:temporal_memory_predictive} When a column becomes active due to proximal input, it activates all predicted cells.
-	\item\label{enm:temporal_memory_bursting} All cells in a column burst, when the latter is activated without any predictions. This phenomenon is referred to as \emph{columnar bursting}.
+
+	\item Individual cells receive lateral input on their distal dendrites. In
+	case a certain threshold is crossed, the cells enter a predictive
+	(depolarized)state.
+
+	\item\label{enm:temporal_memory_predictive} When a column becomes active due
+	to proximal input, it activates only those cells that are in predictive state.
+
+	\item\label{enm:temporal_memory_bursting} When a column with no predicted
+	cells becomes active due to proximal input, all cells in a column burst. This
+	phenomenon is referred to as \emph{columnar bursting}.
+
 \end{enumerate}
 
 \subsection{Heidelberg Neuromorphic Computing Platform}
 
-The \gls{hmf} is a hybrid platform consisting of a traditional high-performance cluster and a neuromorphic system. It is developed primarily at the Kirchhoff-Institute for Physics in Heidelberg and the TU Dresden while receiving funding from the \gls{bss} and \gls{hbp} \citep{hbp2014sp9spec}. The platform's core is the wafer-scale integrated \gls{hicann} chip as shown in figure~\ref{fig:wafer}. Part of the chip's unique design is its mixed-signal architecture featuring analog neuron circuits and a digital communication infrastructure. Due to the short intrinsic time constants of the hardware neurons, the system operates on an accelerated timescale with a speed-up factor of \num{10e4} compared to biological real-time.
+The \gls{hmf} is a hybrid platform consisting of a traditional high-performance
+cluster and a neuromorphic system. It is developed primarily at the
+Kirchhoff-Institute for Physics in Heidelberg and the TU Dresden while receiving
+funding from the \gls{bss} and \gls{hbp} \citep{hbp2014sp9spec}. The platform's
+core is the wafer-scale integrated \gls{hicann} chip as shown in
+Figure~\ref{fig:wafer}. Part of the chip's unique design is its mixed-signal
+architecture featuring analog neuron circuits and a digital communication
+infrastructure. Due to the short intrinsic time constants of the hardware
+neurons, the system operates on an accelerated timescale with a speed-up factor
+of \num{10e4} compared to biological real-time.
 
 \begin{figure}
 	\begin{center}
@@ -54,6 +96,21 @@ A single wafer contains 384 chips with \num{200e3} neurons and \num{45e6} synaps
 
 \subsection{Spiking Neuron Model}
 
-There exist different techniques of varying complexity for simulating neural networks. The reference implementation of the \gls{htm} networks is based on first generation, binary neurons with discrete time steps \citep{nupic}. Third generation models, however, incorporate the concept of dynamic time and implement inter-neuron communication based individual spikes.
+There exist different techniques of varying complexity for simulating networks
+of spiking neurons. The reference implementation we use for \gls{htm}  networks
+is  based on first generation, binary neurons with discrete time steps
+\citep{nupic}. Third generation models, however, incorporate the concept of
+dynamic time and implement inter-neuron communication based individual spikes.
 
-Starting from the original Hodgkin-Huxley equations \citep{Hodgkin1952}, multiple spiking neuron models were developed that feature different levels of detail and abstraction. The \gls{hicann} chip implements \gls{adex} neurons \citep{brette2005adaptive}. At its core, it represents a simple \gls{lif} model but features a detailed spiking behavior as well as spike-triggered and sub-threshold adaption. It was found to correctly predict approximately \SI{96}{\%} of the spike times of a Hodgkin-Huxley-type model neuron and about \SI{90}{\%} of the spikes recorded from a cortical neuron \citep{jolivet2008quantitative}. On the \gls{hmf} and thus also in the following simulations, the neurons are paired with conductance-based synapses allowing for a fine-grained control of the synaptic currents and the implementation of e.g. shunting inhibition.
+Starting from the original Hodgkin-Huxley equations \citep{Hodgkin1952},
+multiple spiking neuron models were developed that feature different levels of
+detail and abstraction. The \gls{hicann} chip implements \gls{adex} neurons
+\citep{brette2005adaptive}. At its core, it represents a simple \gls{lif} model
+but features a detailed spiking behavior as well as spike-triggered and
+sub-threshold adaption. It was found to correctly predict approximately
+\SI{96}{\%} of the spike times of a Hodgkin-Huxley-type model neuron and about
+\SI{90}{\%} of the spikes recorded from a cortical neuron
+\citep{jolivet2008quantitative}. On the \gls{hmf} and thus also in the following
+simulations, the neurons are paired with conductance-based synapses allowing for
+a fine-grained control of the synaptic currents and the implementation of e.g.
+shunting inhibition.

@@ -1,6 +1,16 @@
-Implementing neural network models for a neuromorphic hardware platform or dynamic software simulations requires an abstract network description defining the individual cell populations as well as the model's connectivity. For this work, the primary focus was layed on developing mechanistic and functional implementations of the software reference models while staying within the topological as well as parameter restrictions imposed by the hardware platform. A biophysically more detailed approach should begin with simulations of single \gls{htm} neurons and their dendritic properties first before advancing to more complex systems, e.g. full networks.
+Implementing neural network models for a neuromorphic hardware platform or
+dynamic software simulations requires an abstract network description defining
+the individual cell populations as well as the model's connectivity. For this
+work, our primary focus was on developing mechanistic and functional
+implementations of the software reference models while staying within the
+topological and parameter restrictions imposed by the hardware platform.
+A more detailed biophysically approach should begin with simulations of single
+\gls{htm} neurons and their dendritic properties first before advancing to more
+complex systems, e.g. full networks.
 
-In the following paragraphs, spatial pooler as well as temporal memory models will be presented which incorporate basic \gls{htm} properties and are able to reproduce the behaviour of existing software implementations.
+In the following sections we describe spatial pooler and temporal memory
+models that incorporate basic \gls{htm} properties. These models are able to
+reproduce the fundamental behaviour of existing software implementations.
 
 The simulations were set up in Python using the PyNN library \citep{davison2008pynn}. Besides supporting a wide range of software simulators, this high-level interface is also supported by the \gls{hmf} platform \citep{billaudelle14pyhmf}. NEST was used as a simulation backend \citep{gewaltig2007nest}. To enable multiple synaptic time constants per neuron, a custom implementation of the \gls{adex} model was written.
 
@@ -17,15 +27,30 @@ The simulations were set up in Python using the PyNN library \citep{davison2008p
 
 At its core the spatial pooler resembles a \gls{kwta} network: $k$ out of $m$ columns are chosen to be active in each time step. In fact, \gls{kwta} networks have often been mentioned as an approximation for circuits naturally occurring in the neocortex \citep{felch2008hypergeometric}. While this topic has been discussed broadly in literature and continuous-time as well as VLSI implementations were investigated \citep{erlanson1991analog,tymoshchuk2012,maass2000neural}, the requirements which lead to this particular solution go beyond the discussed network architectures.
 
-The network developed for this purpose is presented in figure~\ref{fig:spatial_pooler}. It follows a purely timing-based approach and is designed for \gls{lif} neurons. It allows for very fast decision processes based on a single input event per source. Each column is represented by a single cell which accumulates feed-forward input from the spike sources. Here, the rise time of the membrane voltage decreases with the number of presynaptic events seen by the cell: cells receiving the most input will fire before the others. An inhibitory pool consisting of a single cell collects the network's activity. Low membrane and high synaptic time constants lead to a reliable summation of events. When a certain number of spikes have been collected -- and thus the cell's threshold has been crossed --, the pool strongly inhibits all cells of the network suppressing following spike events.
+The network developed for this purpose is presented in
+Figure~\ref{fig:spatial_pooler}. It follows a purely timing-based approach and
+is designed for \gls{lif} neurons. It allows for very fast decision processes
+based on a single input event per source. Each column is represented by a single
+cell which accumulates feed-forward input from the spike sources. Here, the rise
+time of the membrane voltage decreases with the number of presynaptic events
+seen by the cell: cells receiving the most input will fire before the others. An
+inhibitory pool consisting of a single cell collects the network's activity. Low
+membrane and high synaptic time constants lead to a reliable summation of
+events. When a certain number of spikes have been collected -- and thus the
+cell's threshold has been crossed -- the pool strongly inhibits all cells of
+the network suppressing subsequent spike events.
 
-The model is extended by adding subtle feed-forward shunting inhibition. The inhibitory conductance increases with the overall input activity $\nu_\text{in}$. With the reversal potential set to match the leakage potential, the conductance contributes to the leakage term
+The model is extended by adding subtle feed-forward shunting inhibition. The
+inhibitory conductance increases with the overall input activity
+$\nu_\text{in}$. With the reversal potential set to match the leakage potential,
+the conductance contributes to the leakage term
 
 \begin{align*}
 	g_\text{l}' &= g_\text{l} + g_\text{inh}(\nu_\text{in}).
 \end{align*}
 %
-thus increasing the membrane time constant. This effectively slows down the neurons' responses and thus prolongs the decision period of the network.
+thus increasing the membrane time constant. This effectively slows down the
+neurons' responses and thus prolongs the decision period of the network.
 
 Tie situations between columns receiving the same number of presynaptic events can be resolved by adding slight gaussian jitter to the weights of the excitatory feed-forward connections. This gives some columns structural advantages over other columns resulting in a slightly faster response to the same stimulus. By increasing the standard deviation $\sigma_\text{j}$ of the jitter, the selection criterion can be blurred.
 
@@ -33,7 +58,16 @@ Tie situations between columns receiving the same number of presynaptic events c
 
 \subsection{Temporal Memory}
 
-Similar to the spatial pooler, the temporal memory implementation was designed for fast reaction times and spike-timing based response patterns. A complete network consists of $m$ identical columns with $n$ \gls{htm} cells each. Modelling these cells is a challenge in itself. A multicompartmental neuron model would represent the best fit. While a neuromorphic hardware chip implementing such a model is planned and first steps in that direction have already been taken \citep{millner2012development}, the current system does not provide this feature. Since \gls{htm} cells primarily depend on the active properties of a compartment, it can be modelled by a triple of individual \gls{lif} cells as shown in figure~\ref{fig:temporal_memory}.
+Similar to the spatial pooler, the temporal memory implementation was  designed
+for fast reaction times and spike-timing based response patterns. A complete
+network consists of $m$ identical columns with $n$ \gls{htm} cells each.
+Modelling these cells is a challenge in itself. A multicompartmental neuron
+model would represent the best fit. While a neuromorphic hardware chip
+implementing such a model is planned and first steps in that direction have
+already been taken \citep{millner2012development}, the current system does not
+provide this feature. Since \gls{htm} cells primarily depend on the active
+properties of a compartment, it can be modelled by a triple of individual
+\gls{lif} cells as shown in Figure~\ref{fig:temporal_memory}.
 
 \begin{figure}
 	\begin{center}
@@ -43,9 +77,31 @@ Similar to the spatial pooler, the temporal memory implementation was designed f
 	\label{fig:temporal_memory}
 \end{figure}
 
-A column collects proximal input using a single cell. In fact, this cell can be part of a spatial pooler network as presented in section~\ref{sss:spatial_pooler_network}. When the column becomes active, this cell emits a spike and excites both the neurons representing the \gls{htm} cells' somae as well as inhibitory cells. The latter projection, however, is not strong enough to activate the target compartment alone. Instead, it only leads to a partial depolarization. The soma neuron, however, reaches the firing threshold for a single presynaptic event. This suffices as a columnar bursting mechanism: without predictive input, all soma compartments will fire as a response to the proximal stimulus.
+A column collects proximal input using a single cell. In fact, this cell can be
+part of a spatial pooler network as presented in
+section~\ref{sss:spatial_pooler_network}. When the column becomes active, this
+cell emits a spike and excites both the neurons representing the \gls{htm}
+cells' somae as well as inhibitory cells. The inhibitory projection, however, is
+not strong enough to activate the target compartment alone. Instead, it only
+leads to a partial depolarization. The soma neuron, however, reaches the firing
+threshold for a single presynaptic event. This suffices as a columnar bursting
+mechanism (temporal memory property 3): without predictive input, all soma
+compartments will fire as a response to the proximal stimulus.
 
-Distal input is processed for each cell individually by their dendritic segment compartments. A cell's dendritic segment receives input from other cells' somae. In case its firing threshold is crossed, it partly depolarizes the inhibitory helper cell of the same triplet. This synaptic projection is set up with a relatively long synaptic time constant and a reversal potential matching the threshold voltage. This ensures that the predictive state is carried to the next time step and prohibits the cell from becoming active due to distal input alone. On proximal input, the already depolarized helper cell fires before the somatic compartments. The latter are then inhibited instantly, with the exception of the own triplet's soma. This basic predictive mechanism fails when multiple cells are predicted, since the inhibitory compartments laterally inhibit every cell. By also depolarizing the somatic compartments of predicted cells, this issue can be solved.
+Distal input is processed for each cell individually by their dendritic segment
+compartments. A cell's dendritic segment receives input from other cells' somae.
+When its firing threshold is crossed, it partly depolarizes the inhibitory
+helper cell of the same triplet. This synaptic projection is set up with a
+relatively long synaptic time constant and a reversal potential matching the
+threshold voltage. This ensures that the predictive state is carried to the next
+time step and prohibits the cell from becoming active due to distal input alone.
+On proximal input, the already depolarized helper cell fires before the somatic
+compartments. The latter are then inhibited instantly, with the exception of the
+own triplet's soma. As described, this basic predictive mechanism fails when
+multiple cells are predicted, since the inhibitory compartments laterally
+inhibit every cell. The solution is to also depolarize the somatic
+compartments of predicted cells. In summary this mechanism satisfies temporal
+memory properties 1 and 2.
 
 \begin{figure*}[p]
 	\begin{center}
