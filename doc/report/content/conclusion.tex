@@ -2,9 +2,9 @@ Implementing machine intelligence algorithms as spiking neural networks and port
 
 We have shown in this paper, that \glspl{htm} can be successfully modeled in dynamic simulations. The basic functionality of spatial pooler and temporal memory networks could be reproduced based on \gls{adex} neurons. In theory, the proof of concept networks can be easily transferred to the \gls{hmf}, since the high-level software interfaces are designed to be interchangable. Of course, emulating the models on the actual hardware platform will bring up a new set of challenges.
 
-Adapting the \gls{htm}'s plasticity rules to the features available on the \gls{hmf} has turned out to be highly nontrivial. The learning rules could not be replicated with the current implementation of classic \gls{stdp}.
+Adapting the \gls{htm}'s plasticity rules to the features available on the \gls{hmf} has turned out to be highly nontrivial. The learning rules could not be replicated with the current implementation of classic \gls{stdp}. As a freely programmable microprocessor directly embedded into the neuromorphic core, the \gls{ppu} will in future extend the flexibility of the system's plasticity mechanisms.
 
 Analog neuromorphic hardware is susceptible to transistor mismatches due to e.g. dopand fluctuations in the production process. A careful calibration of the individual neurons is required to compensate for these variations. Due to the complexity of the problem and the high number of interdependent variables, a perfect calibration is hard to accomplish. Therefore, network models are required to be tolerant regarding certain spatial, and trial-to-trial variations on the computing substrate. Carrying out additional Monte Carlo simulations with slightly randomized parameters is important to investigate the robustness of the presented networks.
 
-Finally, a multicompartmental neuron model is planned for a later version of the neurmorphic platform. Making use of this extended feature set will significantly increase the level of biophysical detail.
+Finally, a multicompartmental neuron model is planned for a later version of the neurmorphic platform. Making use of this extended feature set will significantly increase the level of biophysical detail. 
 
