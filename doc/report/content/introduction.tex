@@ -1,18 +1,45 @@
-Mammals -- and especially human beings -- are able to process diverse sensory input, learn and recognize complex spatial and temporal patterns, and generate behaviour based on context and previous experiences. While computers are efficient in carrying out numerical calculations, they fall short in solving cognitive tasks. Studying the brain and the neocortex in particular is an important step to develop new algorithms closing the gap between intelligent organisms and artificial systems. Numenta is a company dedicated to developing such algorithms and at the same time investigating the principles of the neocortex. Their \gls{htm} models are designed to solve real world problems based on neuroscience results and theories.
+The mammalian brain, particularly that of humans, is able to process diverse
+sensory input, learn and recognize complex spatial and temporal patterns, and
+generate behaviour based on context and previous experiences. While computers
+are efficient in carrying out numerical calculations, they fall short in solving
+cognitive tasks. Studying the brain and the neocortex in particular is an
+important step to develop new algorithms closing the gap between intelligent
+organisms and artificial systems. Numenta is a company dedicated to developing
+such algorithms and at the same time investigating the principles of the
+neocortex. Their \gls{htm} models are designed to solve real world problems
+based on neuroscience results and theories.
 
-Efficiently simulating large-scale neural networks in software is still a challenge. The more biophysical details a model features, the more computational ressources are required. Different techniques for speeding up the execution of such implementations exist, e.g. by parallelizing calculations. Dedicated hardware platforms are also being developed. Digital neuromorphic hardware like the SpiNNaker platform often features highly parallelized processing architectures and optimized signal routing \citep{furber2014spinnaker}. On the other hand, analog systems directly emulate the neuron's behavior in electronic microcircuits. The \gls{hmf} is a mixed-signal platform developed in the scopes of the \gls{bss} and \gls{hbp}.
+Efficiently simulating large-scale neural networks in software is still a
+challenge. The more biophysical details a model features, the more computational
+ressources it requires. Different techniques for speeding up the execution of
+such implementations exist, e.g. by parallelizing calculations. Dedicated
+hardware platforms are also being developed. Digital neuromorphic hardware like
+the SpiNNaker platform often features highly parallelized processing
+architectures and optimized signal routing \citep{furber2014spinnaker}. On the
+other hand, analog systems directly emulate the neuron's behavior in electronic
+microcircuits. The \gls{hmf} is a mixed-signal platform developed in the scopes
+of the \gls{bss} and \gls{hbp}.
 
 In this paper we present efforts in porting \gls{htm} networks to the \gls{hmf}.
 A framework for simulating \glspl{htm} based on spiking neural networks is
-introduced, as well as concrete network models for the spatial pooler and the
-temporal memory. We compare the behavior to software
+introduced, as well as concrete network models for the HTM concepts spatial
+pooling and the temporal memory. We compare the behavior to software
 implementations in order to verify basic properties of the \gls{htm} networks.
-We discuss the overall applicability of these models on the target platform,
-the impact of synaptic plasticity and connection routing considerations.
+We discuss the overall applicability of these models on the target platform, the
+impact of synaptic plasticity and connection routing considerations.
 
 \subsection{Hierarchical Temporal Memory}
 
-\gls{htm} represents a set of concepts and algorithms for machine intelligence based on neocortical principles \citep{numenta2011htm}. It is designed to learn \emph{spatial as well as temporal patterns} and generate predictions from previously seen sequences. It features \emph{continuous learning} and operates on streaming data. An \gls{htm} network consists of one or multiple hierarchically arranged \emph{regions}. The latter contain neurons organized in columns. The functional principle is captured in two algorithms which are laid out in detail in the original whitepaper \citep{numenta2011htm}. The following paragraphs are intended as an introductory overview only and introduce the properties relevant to this work.
+\gls{htm} represents a set of concepts and algorithms for machine intelligence
+based on neocortical principles \citep{numenta2011htm}. It is designed to learn
+spatial as well as temporal patterns and generate predictions from
+previously seen sequences. It features continuous learning and operates
+on streaming data. An \gls{htm} network consists of one or multiple
+hierarchically arranged regions. The latter contain neurons organized in
+columns. The functional principle is captured in two algorithms which are laid
+out in detail in the original whitepaper \citep{numenta2011htm}. The following
+paragraphs are intended as an introductory overview and introduce the
+properties relevant to this work.
 
 %\subsubsection{Spatial Pooler}
 \label{sec:spatial_pooler_properties}
@@ -24,7 +51,8 @@ characterized by the following properties:
 
 \begin{enumerate}
 	\item\label{enm:spatial_pooler_sparsity} The columnar activity is sparse.
-	Typically, 40 out of 2,048 colums are active, which is equivalent to a sparsity
+	Typically, 40 out of 2,048 colums are active, which is approximately a
+	sparsity
 	of \SI{2}{\%}. The number of active columns is constant in each time step and
 	does not depend on the input sparsity.
 
@@ -37,10 +65,10 @@ characterized by the following properties:
 	counts are mapped to sparse columnar representations with low pairwise
 	overlap counts, while high overlaps are projected onto representations
 	with high overlap. Thus, similar input vectors lead to a similar columnar
-	activation, while disjunct stimuli activate distinct sets of cells.
+	activation, while disjunct stimuli activate distinct columns.
 
 	\item\label{enm:spatial_pooler_minimum} A column must receive a minimum input
-	of e.g. 15 to become active.
+	(e.g. 15 bits) to become active.
 
 \end{enumerate}
 
@@ -64,8 +92,9 @@ memory's behavior can be summarized by the following:
 	to proximal input, it activates only those cells that are in predictive state.
 
 	\item\label{enm:temporal_memory_bursting} When a column with no predicted
-	cells becomes active due to proximal input, all cells in a column burst. This
-	phenomenon is referred to as \emph{columnar bursting}.
+	cells becomes active due to proximal input, all cells in the column become
+	active. This
+	phenomenon is referred to as columnar bursting.
 
 \end{enumerate}
 
@@ -90,7 +119,12 @@ of \num{10e4} compared to biological real-time.
 	\label{fig:wafer}
 \end{figure}
 
-\gls{hicann} features 512 neurons (\emph{dendritic membrane circuits}). Each circuit can be stimulated via 226 synapses on two synaptic inputs. As a default, the latter are configured for excitatory and inhibitory stimuli, respectively. However, they can be set up to represent e.g. two excitatory inputs with different synaptic time constants or reversal potentials. By connecting multiple dendritic membranes larger neurons with up to \num{14e3} synapses can be formed.
+\gls{hicann} features 512 neurons or \emph{dendritic membrane circuits}. Each
+circuit can be stimulated via 226 synapses on two synaptic inputs. As a default,
+the latter are configured for excitatory and inhibitory stimuli, respectively.
+However, they can be set up to represent e.g. two excitatory inputs with
+different synaptic time constants or reversal potentials. By connecting multiple
+dendritic membranes larger neurons with up to \num{14e3} synapses can be formed.
 
 A single wafer contains 384 chips with \num{200e3} neurons and \num{45e6} synapses. Multiple wafers can be connected to form even larger networks. The \gls{bss}'s infrastructure consists of six wafers and is being extended to 20 wafers for the first \gls{hbp} milestone.
 

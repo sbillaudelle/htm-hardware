@@ -4,8 +4,8 @@ the individual cell populations as well as the model's connectivity. For this
 work, our primary focus was on developing mechanistic and functional
 implementations of the software reference models while staying within the
 topological and parameter restrictions imposed by the hardware platform.
-A more detailed biophysically approach should begin with simulations of single
-\gls{htm} neurons and their dendritic properties first before advancing to more
+A more detailed biophysical approach should begin with simulations of single
+\gls{htm} neurons and their dendritic properties before advancing to more
 complex systems, e.g. full networks.
 
 In the following sections we describe spatial pooler and temporal memory
@@ -17,18 +17,38 @@ The simulations were set up in Python using the PyNN library \citep{davison2008p
 \subsection{Spatial Pooler}
 \label{sss:spatial_pooler_network}
 
+At its core the spatial pooler resembles a \gls{kwta}
+network: $k$ out of $m$ columns are chosen to be active in each time step. In
+fact, \gls{kwta} networks have often been mentioned as an approximation for
+circuits naturally occurring in the neocortex \citep{felch2008hypergeometric}.
+Continuous-time and VLSI implementations of such systems have been discussed
+in the literature \citep{erlanson1991analog,tymoshchuk2012,maass2000neural}.
+In the implementation below we describe a novel approach to maintaining
+stable sparsity levels even with a large number of inputs.
+
 \begin{figure}
 	\begin{center}
 		\includegraphics[width=\columnwidth]{../circuitry/spatial_pooler.pdf}
 	\end{center}
-	\caption{Timing based implementation of the spatial pooler. Each column is represented by a single cell \emph{C} and receives sparse input from the input vector \protect\circled{green}{1}. The columns become active when the number of connected active inputs crosses a threshold. The rise time of the membrane voltage highly depends on the number of coincident inputs: cells with more presynaptic activity will fire before those with less stimuli do. Inhibitory pool \emph{I} accumulates the columnar spikes \protect\circled{green}{2} and in doing so acts as a counter. After a certain number of columns have become active, the pool will inhibit and shut down all columns preventing any further activity \protect\circled{green}{3}. To stabilize this \gls{kwta} model, all columns receive a subsampled feed-forward inhibition \protect\circled{green}{4}. This effectively prolongs the decision period for high input activity.}
+	\caption{Timing based implementation of the spatial pooler. Each column is
+	represented by a single cell \emph{C} and receives sparse input from the input
+	vector \protect\circled{green}{1}. The columns become active when the number of
+	connected active inputs crosses a threshold. The rise time of the membrane
+	voltage highly depends on the number of coincident inputs: cells with more
+	presynaptic activity will fire before those with less stimuli do. Inhibitory
+	pool \emph{I} accumulates the columnar spikes \protect\circled{green}{2} and in
+	doing so acts as a counter. After a certain number of columns have become
+	active, the pool will inhibit and shut down all columns preventing any further
+	activity \protect\circled{green}{3}. To stabilize this \gls{kwta} model, all
+	columns receive a subsampled feed-forward inhibition
+	\protect\circled{green}{4}. This effectively prolongs the decision period for
+	high input activity.}
+
 	\label{fig:spatial_pooler}
 \end{figure}
 
-At its core the spatial pooler resembles a \gls{kwta} network: $k$ out of $m$ columns are chosen to be active in each time step. In fact, \gls{kwta} networks have often been mentioned as an approximation for circuits naturally occurring in the neocortex \citep{felch2008hypergeometric}. While this topic has been discussed broadly in literature and continuous-time as well as VLSI implementations were investigated \citep{erlanson1991analog,tymoshchuk2012,maass2000neural}, the requirements which lead to this particular solution go beyond the discussed network architectures.
-
 The network developed for this purpose is presented in
-Figure~\ref{fig:spatial_pooler}. It follows a purely timing-based approach and
+Figure~\ref{fig:spatial_pooler}. It follows a purely time-based approach and
 is designed for \gls{lif} neurons. It allows for very fast decision processes
 based on a single input event per source. Each column is represented by a single
 cell which accumulates feed-forward input from the spike sources. Here, the rise
@@ -50,9 +70,17 @@ the conductance contributes to the leakage term
 \end{align*}
 %
 thus increasing the membrane time constant. This effectively slows down the
-neurons' responses and thus prolongs the decision period of the network.
+neurons' responses and thus prolongs the decision period of the network. With
+this inhibition, the resulting system is able to achieve stable sparsity
+levels with a large number of inputs, at the cost of slightly slower response
+times.
 
-Tie situations between columns receiving the same number of presynaptic events can be resolved by adding slight gaussian jitter to the weights of the excitatory feed-forward connections. This gives some columns structural advantages over other columns resulting in a slightly faster response to the same stimulus. By increasing the standard deviation $\sigma_\text{j}$ of the jitter, the selection criterion can be blurred.
+Tie situations between columns receiving the same number of presynaptic events
+are resolved by adding slight gaussian jitter to the weights of the
+excitatory feed-forward connections. This gives some columns structural
+advantages over other columns resulting in a slightly faster response to the
+same stimulus. By increasing the standard deviation $\sigma_\text{j}$ of the
+jitter, the selection criterion can be blurred.
 
 %The proposed \gls{kwta} architecture was developed with the spatial pooler's properties in mind. In the following paragraphs, the model's performance is examined and compared to the goals formulated in section~\ref{sec:spatial_pooler_properties}.
 
@@ -85,7 +113,7 @@ cells' somae as well as inhibitory cells. The inhibitory projection, however, is
 not strong enough to activate the target compartment alone. Instead, it only
 leads to a partial depolarization. The soma neuron, however, reaches the firing
 threshold for a single presynaptic event. This suffices as a columnar bursting
-mechanism (temporal memory property 3): without predictive input, all soma
+mechanism (i.e. temporal memory property 3): without predictive input, all soma
 compartments will fire as a response to the proximal stimulus.
 
 Distal input is processed for each cell individually by their dendritic segment

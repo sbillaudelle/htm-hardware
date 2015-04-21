@@ -4,7 +4,10 @@ The network models presented in the previous section were simulated in software 
 
 %\subsubsection{Spatial Pooler}
 
-The \emph{spatial pooler} was analyzed for a network spanning 1,000 columns and an input vector of size 10,000. To speed up the simulation, the input connectivity was preprocessed in software by multiplying the stimulus vector to the connectivity matrix.
+The spatial pooler was analyzed for a network spanning 1,000 columns and an
+input vector of size 10,000. To speed up the simulation, the input connectivity
+was preprocessed in software by multiplying the stimulus vector to the
+connectivity matrix.
 
 A first experiment was designed to verify the basic \gls{kwta} functionality. A
 random pattern was presented to the network. The number of active inputs per
@@ -64,11 +67,18 @@ data, thus verifying property~\ref{enm:spatial_pooler_overlap}.
 
 %\subsubsection{Learning}
 
-The experiments have shown that the model presented in this section does fulfill the requirements for a spatial pooler and can be considered a solid \gls{kwta} implementation. The specific results of course depend on the individual network's size and configuration. In this case, the network -- most importantly the columnar neurons' time constants -- was configured for a relatively short time step of $T = \SI{50}{\milli\second}$. By choosing different parameter sets, the network can be tuned towards different operational scenarios, e.g. further increasing the model's stability.
+The experiments have shown that the model presented in this section does fulfill
+the requirements for a spatial pooler and can be considered a solid \gls{kwta}
+implementation. The specific results of course depend on the individual
+network size and configuration. In this case, the network -- most importantly
+the columnar neurons' time constants -- was configured for a relatively short
+time step of $T = \SI{50}{\milli\second}$. By choosing different parameter sets,
+the network can be tuned towards different operational scenarios, e.g. further
+increasing the model's stability.
 
 %\subsubsection{Temporal Memory}
 
-The \emph{temporal memory} was verified in a first sequence prediction
+The temporal memory was verified in a first sequence prediction
 experiment. A reference software implementation was trained with three disjunct
 sequences of length three. Consecutive sequences were separated by a random
 input pattern. The trained network's lateral connectivity was dumped and loaded
@@ -86,18 +96,23 @@ Figure~\ref{fig:static_temporal_memory_live}.
 
 \subsection{Learning Algorithms}
 
-Realizing online learning mechanisms in neuromorphic hardware is a challenge by itself, especially for accelerated systems. While the \gls{hmf} features implementations of nearest-neighbor \gls{stdp} and \gls{stp} \citep{friedmann13plasticity,billaudelle14stp}, more complex update algorithms are hard to implement. Numenta's networks are based on custom structural plasticity rules which go beyond traditional mechanisms.
+Implementing online learning mechanisms in neuromorphic hardware is a challenge,
+especially for accelerated systems. Although the \gls{hmf} features
+implementations of nearest-neighbor \gls{stdp} and \gls{stp}
+\citep{friedmann13plasticity,billaudelle14stp}, more complex update algorithms
+are hard to implement. Numenta's networks rely on structural
+plasticity rules which go beyond these mechanisms.
 
 The spatial pooler's stimulus changes significantly for learned input patterns.
 Verification of its functionality under these conditions is important. In order
 to follow the \gls{htm} specification as closely possible, a supervised update
 rule was implemented in an outer loop: for each time step, a matrix containing
 the connections' permanence values is updated according to the activity patterns
-of the previous time step. This allows to implement the concepts of structural
-plasticity presented in the original whitepaper. For the target platform, the
-learning algorithms could be implemented on the \gls{ppu} which is planned for
-the next version of the \gls{hicann} chip \citep{friedmann2013phd}. Simulation
-results of the implementation described above are shown in
+of the previous time step. This allows us to implement the concepts of
+structural plasticity presented in the original whitepaper. For the target
+platform, the learning algorithms could be implemented on the \gls{ppu} which is
+planned for the next version of the \gls{hicann} chip \citep{friedmann2013phd}.
+Simulation results of the implementation described above are shown in
 Figure~\ref{fig:spatial_pooler_learning}.
 
 Experiments to replace the \gls{htm} structural plasticity rules by a classic
@@ -130,4 +145,10 @@ approximately \num{3e3} neurons per wafer. With just 226 synapses, just under
 
 Scaling up the proof-of-concept models to a size useful for production purposes, however, challenges the hardware topology as well as the projection algorithms.
 
-A minimal useful \gls{htm} network spans 1024 columns with 8 cells each. In such a scenario the neurons would receive lateral input on 32 dendritic segments. Allowing approximately \num{1e3} afferent connections per dendritic segment, this network could be realized on approximately \num{1e6} dendritic membrane circuits, or 6 wafers. The existing system set up for the \gls{bss} would suffice for this scenario. Even larger networks could be brought to the \gls{hbp}'s platform.
+A minimal useful \gls{htm} network spans 1024 columns with 8 cells each. In such
+a scenario the neurons would receive lateral input on 32 dendritic segments.
+Allowing approximately \num{1e3} afferent connections per dendritic segment,
+this network could be realized on approximately \num{1e6} dendritic membrane
+circuits, or six wafers. The existing system set up for the \gls{bss} would
+suffice for this scenario. Even larger networks could be brought to the
+\gls{hbp}'s platform.
